@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RedTrack</string>
+    <string name="title_activity_main">RedTrack</string>
+    <string name="package_name">de.redstonecloud.redtrack</string>
+    <string name="custom_url_scheme">de.redstonecloud.redtrack</string>
+</resources>
