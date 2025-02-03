@@ -181,6 +181,7 @@ export function ServerTable({
                                 closeOnSelect={false}
                                 selectedKeys={visibleColumns}
                                 selectionMode="multiple"
+                                // @ts-ignore
                                 onSelectionChange={setVisibleColumns}
                             >
                                 {columns.map((column : any) => (
