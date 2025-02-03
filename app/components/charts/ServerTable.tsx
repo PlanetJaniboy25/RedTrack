@@ -17,7 +17,7 @@ import {
     Chip
 } from "@heroui/react";
 
-import AddServer from "../server/AddServer";
+import { AddServer } from "../server/AddServer";
 
 import { ChevronDownIcon, SearchIcon, InfoIcon } from "../icons";
 
@@ -36,9 +36,13 @@ export function capitalize(s: String) {
 const INITIAL_VISIBLE_COLUMNS = ["server", "playerCount", "dailyPeak", "record"];
 
 export function ServerTable({
+    url,
+    token,
     data,
     onSelectedInternalIdsChange
 }: {
+    url: string | null,
+    token: string,
     data: any;
     onSelectedInternalIdsChange: (keys: Set<any>) => void;
 }) {
@@ -212,7 +216,7 @@ export function ServerTable({
                                 ))}
                             </DropdownMenu>
                         </Dropdown>
-                        <AddServer />
+                        <AddServer url={url} token={token} />
                     </div>
                 </div>
             </div>

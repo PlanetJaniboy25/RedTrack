@@ -108,7 +108,7 @@ export default function Home() {
             <div>
                 <Card>
                     <CardBody>
-                        <ServerTable data={tableData} onSelectedInternalIdsChange={setSelectedInternalIds} />
+                        <ServerTable url={url} token={token} data={tableData} onSelectedInternalIdsChange={setSelectedInternalIds} />
                     </CardBody>
                 </Card>
             </div>

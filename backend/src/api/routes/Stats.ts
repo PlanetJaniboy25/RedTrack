@@ -1,6 +1,4 @@
 import { Router, Request, Response } from 'express';
-import Users from "../../models/Users";
-import Sessions from "../../models/Sessions";
 import { requiresAuth } from "../ApiServer";
 import Pings from "../../models/Pings";
 import Server from "../../models/Server";
