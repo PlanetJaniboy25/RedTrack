@@ -166,7 +166,6 @@ export function ServerTable({
     }, [
         filterValue,
         visibleColumns,
-        onRowsPerPageChange,
         data.length,
         onSearchChange,
         hasSearchFilter,
