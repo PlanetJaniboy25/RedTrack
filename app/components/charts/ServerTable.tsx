@@ -224,7 +224,7 @@ export function ServerTable({ data }: { data: any }) {
                 <div className="flex justify-between gap-3 items-end">
                     <Input
                         isClearable
-                        className="w-full sm:max-w-[44%]"
+                        className="w-full sm:max-w-[15%]"
                         placeholder="Search by server name..."
                         startContent={<SearchIcon />}
                         value={filterValue}
@@ -300,14 +300,6 @@ export function ServerTable({ data }: { data: any }) {
                     total={pages}
                     onChange={setPage}
                 />
-                <div className="hidden sm:flex w-[30%] justify-end gap-2">
-                    <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onPreviousPage}>
-                        Previous
-                    </Button>
-                    <Button isDisabled={pages === 1} size="sm" variant="flat" onPress={onNextPage}>
-                        Next
-                    </Button>
-                </div>
             </div>
         );
     }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
