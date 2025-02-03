@@ -118,11 +118,11 @@ export function ServerTable({
         }
 
         switch (columnKey) {
-            case "playerCount":
+            case "server":
                 return (
                     <div className="flex gap-4 items-center">
-                        {cellValue}
                         {chip}
+                        {cellValue}
                     </div>
                 )
             case "dailyPeak":
