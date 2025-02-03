@@ -1,22 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { Card, CardBody, CardFooter, CardHeader, Input, Select } from "@heroui/react";
-import {
-    Table,
-    TableHeader,
-    TableColumn,
-    TableBody,
-    TableRow,
-    TableCell,
-    Button,
-    DropdownTrigger,
-    Dropdown,
-    DropdownMenu,
-    DropdownItem,
-    Chip,
-    User,
-    Pagination,
-} from "@heroui/react";
+import { Card, CardBody, CardFooter, CardHeader } from "@heroui/react";
 import { OnlinePlayersChart } from "@/components/charts/OnlinePlayersChart";
 import { ServerTable } from "@/components/charts/ServerTable";
 
@@ -59,10 +43,8 @@ export default function Home() {
     }
 
     return (
-        <div className="p-4 space-y-4">
-            <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-
-            <div className="flex gap-4 w-full">
+        <div className="flex flex-col h-screen p-4 space-y-4">
+            <div className="flex flex-grow gap-4 w-full">
                 <Card className="flex-grow">
                     <CardHeader>
                         <h2 className="text-blueGray-100 mb-1 text-xl font-semibold">
