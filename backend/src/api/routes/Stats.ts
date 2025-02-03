@@ -32,7 +32,7 @@ router.get('/all', requiresAuth, async (req: Request, res: Response) => {
         });
 
         //log from, to and data
-        console.log(allPings, parseInt(req.query.from as string), parseInt(req.query.to as string));
+        //console.log(allPings, parseInt(req.query.from as string), parseInt(req.query.to as string));
     }
 
     allPings = allPings.sort((a, b) => {
@@ -88,53 +88,53 @@ router.get('/latest', requiresAuth, async (req: Request, res: Response) => {
 
     const serversWithPings = await Promise.all(servers.map(async (server) => {
         const latestPings = await Pings.aggregate([
-            { $match: { server: server._id } },   // Match the server ID
+            { $match: { server: server._id.toString() } },   // Match the server ID
             { $sort: { timestamp: -1 } },         // Sort by timestamp in descending order
             { $limit: 1 }                         // Limit to the most recent ping
         ]);
 
-        const latestPing = latestPings.length ? latestPings[0] : null
+        const latestPing = latestPings.length > 0 ? latestPings[0] : null
 
         const dailyPeak = await Pings.aggregate([
             {
                 $match: {
-                    server: server._id,
+                    server: server._id.toString(),
                     timestamp: { $gte: currentMillis - 24 * 60 * 60 * 1000 }
                 }
             },
             {
                 $group: {
-                    _id: null,
-                    maxPlayerCount: { $max: "$playerCount" },
+                    _id: undefined,
+                    playerCount: { $max: "$playerCount" },
                     timestamp: { $first: "$timestamp" }
                 }
             }
         ]);
 
         const record = await Pings.aggregate([
-            { $match: { server: server._id } },
+            { $match: { server: server._id.toString() } },
             {
                 $group: {
-                    _id: null,
-                    maxPlayerCount: { $max: "$playerCount" },
+                    _id: undefined,
+                    playerCount: { $max: "$playerCount" },
                     timestamp: { $first: "$timestamp" }
                 }
             }
         ]);
 
-        console.log(server.name + " " + latestPing);
-        console.log(server.name + " " + dailyPeak);
-        console.log(server.name + " " + record);
+        console.log(server.name + " " + JSON.stringify(latestPing));
+        console.log(server.name + " " + JSON.stringify(dailyPeak));
+        console.log(server.name + " " + JSON.stringify(record));
 
         const outdated = !latestPing || (currentMillis - latestPing.timestamp) > parseInt(process.env.ping_rate as string)
 
         return {
-            internalId: server._id,
+            internalId: server._id.toString(),
             server: server.name,
             playerCount: latestPing ? latestPing.playerCount : 0,
-            dailyPeak: dailyPeak.length ? dailyPeak[0].maxPlayerCount : 0,
+            dailyPeak: dailyPeak.length ? dailyPeak[0].playerCount : 0,
             dailyPeakTimestamp: dailyPeak.length ? dailyPeak[0].timestamp : 0,
-            record: record.length ? record[0].maxPlayerCount : 0,
+            record: record.length ? record[0].playerCount : 0,
             recordTimestamp: record.length ? record[0].timestamp : 0,
             invalidPings: !latestPing,
             outdated
