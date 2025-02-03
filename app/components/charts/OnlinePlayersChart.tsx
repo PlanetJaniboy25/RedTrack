@@ -130,7 +130,7 @@ export function OnlinePlayersChart({ data }: { data: any }) {
         <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-blueGray-700">
             <div className="p-4 flex-auto">
                 {/* Chart */}
-                <div className="relative h-350-px">
+                <div>
                     <canvas ref={canvasRef}></canvas>
                 </div>
             </div>
