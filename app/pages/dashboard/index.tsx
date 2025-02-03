@@ -31,8 +31,9 @@ export default function Home() {
 
     const [selectedInternalIds, setSelectedInternalIds] = useState<Set<any>>(new Set([]));
 
+    const pingRate = 3000;
 
-    useEffect(() => {
+    function reloadData() {
         let servers = JSON.parse(localStorage?.getItem("servers") || "[]");
         let id = parseInt(router.query.server as string) || 0;
         let server = servers[id];
@@ -60,7 +61,17 @@ export default function Home() {
                 }
             }).then(response => response.json()).then((dat) => setData({ ...data, ...dat }))
         }
-    }, [router.query, router, fromDate, toDate]);
+    }
+
+    useEffect(() => {
+        reloadData();
+        
+        const intervalId = setInterval(async () => {
+            reloadData();
+        }, pingRate);
+
+        return () => clearInterval(intervalId);
+    }, [pingRate, router.query, router, fromDate, toDate]);
 
     if (!token) {
         return (<div className="flex flex-col items-center justify-center py-2 h-screen min-w-96 w-96 max-w-96">Server does not exist. Please go back.</div>)
