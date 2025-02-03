@@ -15,6 +15,8 @@ export default function Home() {
     let [fromDate, setFromDate] = useState(new Date().getTime() - 60 * 1000 * 5)
     let [toDate, setToDate] = useState(new Date().getTime());
 
+    const [selectedInternalIds, setSelectedInternalIds] = useState<Set<any>>(new Set([]));
+
 
     useEffect(() => {
         let servers = JSON.parse(localStorage?.getItem("servers") || "[]");
@@ -76,28 +78,31 @@ export default function Home() {
                         <ServerTable data={
                             [
                                 {
-                                    id: 1,
+                                    ranking: 1,
                                     server: "Syodo",
                                     playerCount: 34,
                                     dayPeak: 45,
-                                    record: 145
+                                    record: 145,
+                                    internalId: "67a0dd0ae10be8c2ce6acc3a"
                                 },
                                 {
-                                    id: 2,
+                                    ranking: 2,
                                     server: "LostPlaceMC",
                                     playerCount: 3,
                                     dayPeak: 3,
-                                    record: 15
+                                    record: 15,
+                                    internalId: "67a0dd6de10be8c2ce6acc3c"
                                 },
                                 {
-                                    id: 3,
+                                    ranking: 3,
                                     server: "LostPlaceMC (Beta)",
                                     playerCount: 0,
                                     dayPeak: 1,
-                                    record: 4
+                                    record: 4,
+                                    internalId: "67a0dd7fe10be8c2ce6acc3d"
                                 }
                             ]
-                        } />
+                        } onSelectedInternalIdsChange={setSelectedInternalIds} />
                     </CardBody>
                 </Card>
             </div>

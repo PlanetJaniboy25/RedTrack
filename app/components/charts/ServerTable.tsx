@@ -16,36 +16,13 @@ import {
 } from "@heroui/react";
 
 export const columns = [
-    { name: "ID", uid: "id", sortable: true },
+    { name: "Internal ID", uid: "internalId", sortable: true },
+    { name: "Ranking", uid: "ranking", sortable: true },
     { name: "Server", uid: "server", sortable: true },
-    { name: "Player count", uid: "playerCount", sortable: true },
-    { name: "Daily peak", uid: "dayPeak", sortable: true },
+    { name: "Player Count", uid: "playerCount", sortable: true },
+    { name: "Daily Peak", uid: "dayPeak", sortable: true },
     { name: "Record", uid: "record", sortable: true }
 ];
-
-export const data = [
-    {
-        id: 1,
-        server: "Syodo",
-        playerCount: 34,
-        dayPeak: 45,
-        record: 145
-    },
-    {
-        id: 2,
-        server: "LostPlaceMC",
-        playerCount: 3,
-        dayPeak: 3,
-        record: 15
-    },
-    {
-        id: 3,
-        server: "LostPlaceMC (Beta)",
-        playerCount: 0,
-        dayPeak: 1,
-        record: 4
-    }
-]
 
 export function capitalize(s: String) {
     return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
@@ -133,13 +110,19 @@ export const ChevronDownIcon = ({ strokeWidth = 1.5, ...otherProps }) => {
 
 const INITIAL_VISIBLE_COLUMNS = ["server", "playerCount", "dayPeak", "record"];
 
-export function ServerTable({ data }: { data: any }) {
+export function ServerTable({
+    data,
+    onSelectedInternalIdsChange
+}: {
+    data: any;
+    onSelectedInternalIdsChange: (keys: Set<any>) => void;
+}) {
     const [filterValue, setFilterValue] = React.useState("");
-    const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
+    const [selectedKeys, setSelectedKeys] = React.useState<Set<any>>(new Set([]));
     const [visibleColumns, setVisibleColumns] = React.useState(new Set(INITIAL_VISIBLE_COLUMNS));
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const [sortDescriptor, setSortDescriptor] = React.useState({
-        column: "age",
+        column: "ranking",
         direction: "ascending",
     });
     const [page, setPage] = React.useState(1);
@@ -187,18 +170,6 @@ export function ServerTable({ data }: { data: any }) {
         return server[columnKey];
     }, []);
 
-    const onNextPage = React.useCallback(() => {
-        if (page < pages) {
-            setPage(page + 1);
-        }
-    }, [page, pages]);
-
-    const onPreviousPage = React.useCallback(() => {
-        if (page > 1) {
-            setPage(page - 1);
-        }
-    }, [page]);
-
     const onRowsPerPageChange = React.useCallback((e) => {
         setRowsPerPage(Number(e.target.value));
         setPage(1);
@@ -217,6 +188,19 @@ export function ServerTable({ data }: { data: any }) {
         setFilterValue("");
         setPage(1);
     }, []);
+
+    const handleSelectionChange = (newSelectedItems: any) => {
+        setSelectedKeys(newSelectedItems);
+
+        let selectedInternalIds = newSelectedItems;
+
+        if (selectedInternalIds === "all") {
+            selectedInternalIds = data.map((item) => item.internalId)
+        }
+
+        console.log(selectedInternalIds)
+        onSelectedInternalIdsChange(selectedInternalIds);
+      };
 
     const topContent = React.useMemo(() => {
         return (
@@ -247,9 +231,11 @@ export function ServerTable({ data }: { data: any }) {
                                 onSelectionChange={setVisibleColumns}
                             >
                                 {columns.map((column) => (
-                                    <DropdownItem key={column.uid} className="capitalize">
-                                        {capitalize(column.name)}
-                                    </DropdownItem>
+                                    column.uid !== "internalId" && (
+                                        <DropdownItem key={column.uid} className="capitalize">
+                                            {capitalize(column.name)}
+                                        </DropdownItem>
+                                    )
                                 ))}
                             </DropdownMenu>
                         </Dropdown>
@@ -307,7 +293,7 @@ export function ServerTable({ data }: { data: any }) {
     return (
         <Table
             isHeaderSticky
-            aria-label="Example table with custom cells, pagination and sorting"
+            aria-label="Table containing all added servers"
             bottomContent={bottomContent}
             bottomContentPlacement="outside"
             classNames={{
@@ -318,7 +304,7 @@ export function ServerTable({ data }: { data: any }) {
             sortDescriptor={sortDescriptor}
             topContent={topContent}
             topContentPlacement="outside"
-            onSelectionChange={setSelectedKeys}
+            onSelectionChange={handleSelectionChange}
             onSortChange={setSortDescriptor}
         >
             <TableHeader columns={headerColumns}>
@@ -333,7 +319,7 @@ export function ServerTable({ data }: { data: any }) {
             </TableHeader>
             <TableBody emptyContent={"No data found"} items={sortedItems}>
                 {(item) => (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.internalId}>
                         {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
                     </TableRow>
                 )}
