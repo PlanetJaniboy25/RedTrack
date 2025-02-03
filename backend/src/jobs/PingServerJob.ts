@@ -15,6 +15,7 @@ async function pingServer(data : ServerData) {
             playerCount: pingData.playersOnline
         }).save();
     } catch(e) {
+        console.log(e)
         await new Pings({
             server: data.serverId,
             playerCount: -1

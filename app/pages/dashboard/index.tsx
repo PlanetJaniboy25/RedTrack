@@ -1,10 +1,9 @@
 import React, {useEffect, useState} from "react";
 import {useRouter} from "next/router";
-import {Card, CardBody, CardHeader, Input} from "@heroui/react";
-import {SmallChart} from "@/components/small-chart";
-import {LargeChart} from "@/components/large-chart";
-import {DashboardTable} from "@/components/dashboard-table";
+import {Card, CardBody, CardHeader, Input, Select} from "@heroui/react";
+import {Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button} from "@heroui/react";
 import {ServersChart} from "@/components/charts/serversChart";
+import {Option} from "lucide-react";
 
 
 export default function Home() {
@@ -12,7 +11,9 @@ export default function Home() {
     let [url,setUrl] = useState(null);
     let router = useRouter();
 
-    let [data,setData] = useState({});
+    let [data,setData] = useState({
+        type: "hour"
+    } as any);
     let [fromDate, setFromDate] = useState(new Date().getTime()-60*1000*5)
     let [toDate, setToDate] = useState(new Date().getTime());
 
@@ -35,7 +36,7 @@ export default function Home() {
                     'Content-Type': 'application/json',
                     'authorization': 'Bearer ' + token
                 }
-            }).then(response => response.json()).then((dat) => setData(dat))
+            }).then(response => response.json()).then((dat) => setData({...data, ...dat}))
         }
     }, [router.query, router, fromDate, toDate]);
 
@@ -54,6 +55,30 @@ export default function Home() {
                     <Input type="datetime-local" value={
                         new Date(toDate).toISOString().slice(0, 16)
                     } onChange={(e) => setToDate(new Date(e.target.value).getTime())} />
+                    <Dropdown>
+                        <DropdownTrigger>
+                            <Button className="capitalize" variant="bordered">
+                                {data.type || "Select Type"}
+                            </Button>
+                        </DropdownTrigger>
+                        <DropdownMenu
+                            disallowEmptySelection
+                            aria-label="Time unit"
+                            selectedKeys={data.type}
+                            selectionMode="single"
+                            variant="flat"
+                            onSelectionChange={(e : any) => {
+                                //e is set of strings
+                                setData({...data, type: e[0]});
+                            }}>
+                            <DropdownItem key="minute">Minute</DropdownItem>
+                            <DropdownItem key="hour">Hour</DropdownItem>
+                            <DropdownItem key="day">Day</DropdownItem>
+                            <DropdownItem key="week">Week</DropdownItem>
+                            <DropdownItem key="month">Month</DropdownItem>
+                            <DropdownItem key="year">Year</DropdownItem>
+                        </DropdownMenu>
+                    </Dropdown>
                     <ServersChart data={data} />
                 </CardBody>
             </Card>

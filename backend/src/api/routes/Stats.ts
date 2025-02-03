@@ -10,20 +10,34 @@ router.get('/all', requiresAuth, async (req: Request, res: Response) => {
     let allPings = [];
 
     //if no query.from and query.to, get all pings
-    if (!req.query.from && !req.query.to) {
+    let inRange = req.query.from && req.query.to;
+
+    if (!inRange) {
         allPings = await Pings.find();
     } else {
-        //if query.from and query.to, get pings between those timestamps
         allPings = await Pings.find({
-            timestamp: {
-                $gte: parseInt(req.query.from as string),
-                $lte: parseInt(req.query.to as string)
-            }
+            $and: [
+                {
+                    timestamp: {
+                        $gte: parseInt(req.query.from as string)
+                    }
+                },
+                {
+                    timestamp: {
+                        $lte: parseInt(req.query.to as string)
+                    }
+                }
+            ]
         });
 
         //log from, to and data
         console.log(allPings, parseInt(req.query.from as string), parseInt(req.query.to as string));
     }
+
+    allPings = allPings.sort((a, b) => {
+        //timestamp old to new
+        return a.timestamp - b.timestamp;
+    })
 
     //sort by serverId
     let sortedPings = allPings.sort((a, b) => {
@@ -40,8 +54,8 @@ router.get('/all', requiresAuth, async (req: Request, res: Response) => {
     }
 
     //from is earliest timestamp from all pings, to is latest timestamp from all pings
-    let from = allPings[0].timestamp;
-    let to = allPings[sortedPings.length - 1].timestamp;
+    let from = inRange ? parseInt(req.query.from as string) : allPings[0].timestamp;
+    let to = inRange ? parseInt(req.query.to as string) : allPings[allPings.length - 1].timestamp;
 
     res.json({
         from,
