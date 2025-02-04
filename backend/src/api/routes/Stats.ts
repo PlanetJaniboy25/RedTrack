@@ -1,6 +1,4 @@
 import { Router, Request, Response } from 'express';
-import Users from "../../models/Users";
-import Sessions from "../../models/Sessions";
 import { requiresAuth } from "../ApiServer";
 import Pings from "../../models/Pings";
 import Server from "../../models/Server";
@@ -122,7 +120,7 @@ router.get('/latest', requiresAuth, async (req: Request, res: Response) => {
             }
         ]);
 
-        const outdated = !latestPing || latestPing.timestamp > (currentMillis - parseInt(process.env.ping_rate as string) + 2000)
+        const outdated = !latestPing || (currentMillis - latestPing.timestamp) > (parseInt(process.env.ping_rate as string) * 2)
 
         return {
             internalId: server._id.toString(),
@@ -136,68 +134,6 @@ router.get('/latest', requiresAuth, async (req: Request, res: Response) => {
             outdated
         };
     }));
-
-    /*const serversWithPings = await Server.aggregate([
-        // Lookup the pings for each server
-        {
-          $lookup: {
-            from: "pings", // The collection name for Pings
-            localField: "_id", // Match the server _id
-            foreignField: "server", // Match the server in Pings collection
-            as: "pings"
-          }
-        },
-        // Add a field to get the latest ping
-        {
-          $addFields: {
-            latestPing: {
-              $arrayElemAt: [{ $sortArray: { input: "$pings", sortBy: { timestamp: -1 } } }, 0]
-            },
-            // Add fields for highest player count within the last 24 hours
-            dailyPeak: {
-              $arrayElemAt: [
-                {
-                  $sortArray: {
-                    input: {
-                      $filter: {
-                        input: "$pings",
-                        as: "ping",
-                        cond: { $gte: ["$$ping.timestamp", Date.now() - 24 * 60 * 60 * 1000] }
-                      }
-                    },
-                    sortBy: { playerCount: -1 }
-                  }
-                },
-                0
-              ]
-            },
-            // Add field for the highest player count of all-time
-            record: {
-              $arrayElemAt: [
-                {
-                  $sortArray: {
-                    input: "$pings",
-                    sortBy: { playerCount: -1 }
-                  }
-                },
-                0
-              ]
-            }
-          }
-        },
-        // Project the fields you need
-        {
-          $project: {
-            internalId: "$_id",
-            server: "$name",
-            playerCount: "$latestPing.playerCount",
-            dailyPeak: "$dailyPeak.playerCount",
-            dailyPeakTimestamp: "$dailyPeak.timestamp",
-            record: "$record.playerCount",
-            recordTimestamp: "$record.timestamp"
-          }
-        }
-      ]);*/
 
 
     res.json(serversWithPings);

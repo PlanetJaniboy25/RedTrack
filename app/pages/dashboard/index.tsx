@@ -51,7 +51,7 @@ export default function Home() {
                     'Content-Type': 'application/json',
                     'authorization': 'Bearer ' + token
                 }
-            }).then(response => response.json()).then((dat) => { console.log(dat); setTableData(dat) });
+            }).then(response => response.json()).then((dat) => { setTableData(dat) });
 
             fetch(url + '/api/stats/all?from=' + fromDate + '&to=' + toDate, {
                 method: 'GET',
@@ -65,7 +65,7 @@ export default function Home() {
 
     useEffect(() => {
         reloadData();
-        
+
         const intervalId = setInterval(async () => {
             reloadData();
         }, pingRate);
@@ -108,7 +108,7 @@ export default function Home() {
             <div>
                 <Card>
                     <CardBody>
-                        <ServerTable data={tableData} onSelectedInternalIdsChange={setSelectedInternalIds} />
+                        <ServerTable url={url} token={token} data={tableData} onSelectedInternalIdsChange={setSelectedInternalIds} />
                     </CardBody>
                 </Card>
             </div>
