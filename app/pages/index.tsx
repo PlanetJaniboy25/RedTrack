@@ -5,6 +5,7 @@ import { PlusIcon } from "@/components/icons";
 import { Preferences } from '@capacitor/preferences';
 import {useRouter} from "next/router";
 import {TrashIcon} from "lucide-react";
+import {Capacitor} from "@capacitor/core";
 
 export default function Home() {
   async function deleteServer(index: any) {
@@ -94,7 +95,7 @@ export default function Home() {
                         <Button key={index} variant="bordered" className="w-full" onPress={() => {
                             //reload the page
                             router.push("/dashboard?server=" + index);
-                            router.reload()
+                            if(!Capacitor.isNativePlatform()) router.reload()
                         }}>
                             {server.url}
                         </Button>

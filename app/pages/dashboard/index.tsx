@@ -37,16 +37,6 @@ export default function Dashboard() {
     const pingRate = 3000;
 
     async function reloadData() {
-        let servers = await Preferences.get({ key: 'servers' }).then((dat) => JSON.parse(dat.value || "[]"));
-        let id = parseInt(router.query.server as string) || 0;
-        let server = servers[id];
-        if (server) {
-            setToken(server.token);
-            setUrl(server.url);
-        }
-        else
-            setToken(null);
-
         if (token != null) {
             fetch(url + "/api/stats/latest", {
                 method: 'GET',
@@ -92,14 +82,31 @@ export default function Dashboard() {
     }
 
     useEffect(() => {
-        reloadData();
+        Preferences.get({ key: 'servers' }).then(async (dat) => {
+            let servers = await JSON.parse(dat.value || "[]")
+            let id = parseInt(router.query.server as string) || 0;
+            let server = servers[id];
+            if (server) {
+                setToken(server.token);
+                setUrl(server.url);
 
-        const intervalId = setInterval(async () => {
-            reloadData();
-        }, pingRate);
+                const intervalId = setInterval(async () => {
+                    try {
+                        reloadData();
+                    } catch (e) {
+                        console.log(e)
+                        clearInterval(intervalId)
+                    }
+                }, pingRate);
 
-        return () => clearInterval(intervalId);
-    }, [pingRate, router.query, router, fromDate, toDate]);
+                reloadData();
+
+                return () => clearInterval(intervalId);
+            }
+            else
+                setToken(null);
+        });
+    }, [router.query, router, fromDate, toDate]);
 
     if (!token) {
         return (<div className="flex flex-col items-center justify-center py-2 h-screen min-w-96 w-96 max-w-96">Server does not exist. Please go back.</div>)

@@ -1,17 +1,14 @@
 import { model, Schema, ObjectId } from "mongoose";
 
-export default model("pings", new Schema({
-    server: {
-        type: String, //ObjectId
-        required: true
-    },
+export default model("pings_new", new Schema({
     timestamp: {
         type: Number,
         required: true
     },
-    playerCount: {
-        type: Number,
+    data: {
+        type: Object,
         required: true,
-        default: -1 //<0=server offline
+        default: {}
+        //serverId : playerCount
     }
 }));

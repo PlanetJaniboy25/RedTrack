@@ -4,27 +4,30 @@ import Server from '../models/Server';
 import Pings from "../models/Pings";
 
 async function pingServer(data : ServerData) {
-    const timestamp = Math.floor(Date.now());
     try {
         let pingData = await ping({
             host: data.ip.valueOf(),
             port: data.port.valueOf()
         })
 
-        await new Pings({
-            server: data.serverId,
-            playerCount: pingData.playersOnline,
-            timestamp: timestamp
-        }).save();
+        return pingData?.playersOnline;
     } catch(e) {
+        return 0;
     }
 }
 
 async function pingAll() {
-    // @ts-ignore
-    (await Server.find()).forEach(async (srv) => {
-        await pingServer({ip: srv.ip, port: srv.port, name: srv.name, serverId: srv._id} as any as ServerData);
-    });
+    let data = {} as any;
+
+    for(let s in (await Server.find())) {
+        let srv = (await Server.find())[s];
+        data[srv._id.toString()] = await pingServer({ip: srv.ip, port: srv.port, name: srv.name, serverId: srv._id} as any as ServerData);
+    }
+
+    await new Pings({
+        timestamp: Date.now(),
+        data: data
+    }).save();
 }
 
 export { pingServer, pingAll }
