@@ -36,11 +36,11 @@ export function capitalize(s: String) {
 const INITIAL_VISIBLE_COLUMNS = ["server", "playerCount", "dailyPeak", "record"];
 
 export function ServerTable({
-                                url,
-                                token,
-                                data,
-                                onSelectedInternalIdsChange
-                            }: {
+    url,
+    token,
+    data,
+    onSelectedInternalIdsChange
+}: {
     url: string | null,
     token: string,
     data: any;
@@ -104,25 +104,23 @@ export function ServerTable({
             </span>
         );
 
-        let chip = (
-            <Chip color="success" variant="dot">
-                Live
-            </Chip>
-        );
-        if (server.outdated) {
-            chip = (
-                <Chip color="danger" variant="flat">
-                    {server.invalidData ? 'Invalid' : 'Outdated'}
-                </Chip>
-            )
-        }
-
         switch (columnKey) {
             case "server":
                 return (
-                    <div className="flex gap-4 items-center w-48">
-                        <span className="w-2/3 justify-start items-start text-start">{cellValue}</span>
-                        <div className="w-1/3 justify-end items-end text-end">{chip}</div>
+                    <div className="flex gap-4 items-center w-32">
+                        <div className="flex gap-2 items-center">
+                            {!server.outdated ?
+                                <div className="blinking bg-success-500 w-2 h-2 rounded-full"></div>
+                                : <></>
+                            }
+                            <span>{cellValue}</span>
+                        </div>
+                        {server.outdated ?
+                            <Chip color="danger" variant="flat">
+                                {server.invalidData ? 'Invalid' : 'Outdated'}
+                            </Chip>
+                            : <></>
+                        }
                     </div>
 
                 )
@@ -132,9 +130,9 @@ export function ServerTable({
                         {cellValue}
                         <ArrowIcon
                             className={`size-6 
-                            text-${server.playerCountDevelopment === 'stagnant' ? 
-                                'default-400' : 
-                                server.playerCountDevelopment === 'increasing' ? 'success-400' : 'danger'}  
+                            text-${server.playerCountDevelopment === 'stagnant' ?
+                                    'default-400' :
+                                    server.playerCountDevelopment === 'increasing' ? 'success-400' : 'danger'}  
                             ${server.playerCountDevelopment !== 'stagnant' ? (server.playerCountDevelopment === 'increasing' ? '-rotate-45' : 'rotate-45') : ''}`} />
                     </div>
                 )
