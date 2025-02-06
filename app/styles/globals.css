@@ -22,9 +22,9 @@ body {
 
 .page-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 200px;
   height: 100%;
-  max-height: 550px;
+  max-height: 520px;
 }
 
 @layer base {
@@ -34,21 +34,21 @@ body {
 }
 
 .blinking {
-  -moz-animation: 2s blink ease infinite;
-  -ms-animation: 2s blink ease infinite;
-  -o-animation: 2s blink ease infinite;
-  -webkit-animation: 2s blink ease infinite;
-  animation: 2s blink ease infinite; 
+  -moz-animation: 3s blink ease infinite;
+  -ms-animation: 3s blink ease infinite;
+  -o-animation: 3s blink ease infinite;
+  -webkit-animation: 3s blink ease infinite;
+  animation: 3s blink ease infinite; 
 }
 
 @keyframes blink {
   from, to {
     opacity: 0;
   }
-  50% {
+  20% {
     opacity: 1;
   }
-  60% {
+  70% {
     opacity: 1;
   }
 }
@@ -57,10 +57,10 @@ body {
   from, to {
     opacity: 0;
   }
-  50% {
+  20% {
     opacity: 1;
   }
-  60% {
+  70% {
     opacity: 1;
   }
 }
@@ -69,10 +69,10 @@ body {
   from, to {
     opacity: 0;
   }
-  50% {
+  20% {
     opacity: 1;
   }
-  60% {
+  70% {
     opacity: 1;
   }
 }
@@ -81,10 +81,10 @@ body {
   from, to {
     opacity: 0;
   }
-  50% {
+  20% {
     opacity: 1;
   }
-  60% {
+  70% {
     opacity: 1;
   }
 }
@@ -93,10 +93,10 @@ body {
   from, to {
     opacity: 0;
   }
-  50% {
+  20% {
     opacity: 1;
   }
-  60% {
+  70% {
     opacity: 1; 
   }
 }
