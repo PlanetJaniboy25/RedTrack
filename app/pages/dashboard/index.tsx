@@ -85,9 +85,9 @@ export default function Dashboard() {
                             'Content-Type': 'application/json',
                             'authorization': 'Bearer ' + tok
                         }
-                    }).then(response => response.json()).then((dat) => setData({type: data.type, ...dat }))
+                    }).then(response => response.json()).then((dat) => setData({ type: data.type, ...dat }))
 
-                    if(!dateOverridden) {
+                    if (!dateOverridden) {
                         //TODO: too much, starts lagging the browser
                         //setFromDate(new Date().getTime() - 60 * 1000 * 60 * 12)
                         //setToDate(new Date().getTime())

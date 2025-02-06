@@ -32,35 +32,35 @@ app.listen(port, () => {
   console.log(`Server started at http://localhost:${port}`);
 });
 
-async function requiresAuth(req : Request, res : Response, next : Function) {
-  if(!req.headers.authorization) {
+async function requiresAuth(req: Request, res: Response, next: Function) {
+  if (!req.headers.authorization) {
     res.status(401).send({ message: 'Unauthorized - no auth header' });
     return;
   }
 
-  if(req.headers.authorization.split(' ')[0] !== 'Bearer') {
-    res.status(401).send({message: 'Unauthorized - invalid auth header'});
+  if (req.headers.authorization.split(' ')[0] !== 'Bearer') {
+    res.status(401).send({ message: 'Unauthorized - invalid auth header' });
     return;
   }
 
   let sessionToken = req.headers.authorization.split(' ')[1];
 
   let session = await Sessions.findOne({ token: sessionToken, /*expiresAt: { $gt: new Date() }*/ }); //TODO: add expiresAt check
-    if(!session) {
-        res.status(401).send({ message: 'Unauthorized' });
-        return
-    }
+  if (!session) {
+    res.status(401).send({ message: 'Unauthorized' });
+    return
+  }
 
-    let user = await Users.findOne({_id: session.userId});
-    if(!user) {
-        res.status(401).send({ message: 'Unauthorized' });
-        return
-    }
+  let user = await Users.findOne({ _id: session.userId });
+  if (!user) {
+    res.status(401).send({ message: 'Unauthorized' });
+    return
+  }
 
-    // @ts-ignore
-    req.user = user;
+  // @ts-ignore
+  req.user = user;
 
-    next();
+  next();
 
 }
 

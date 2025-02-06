@@ -7,7 +7,7 @@ const router = Router();
 
 router.post('/create', requiresAuth, async (req: Request, res: Response): Promise<void> => {
     // @ts-ignore
-    if(!Permissions.hasPermission(req.user.permissions, Permissions.ADD_SERVER)) {
+    if (!Permissions.hasPermission(req.user.permissions, Permissions.ADD_SERVER)) {
         res.status(403).json({ error: "You do not have permission to create a server" });
         return;
     }

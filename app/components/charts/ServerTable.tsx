@@ -75,23 +75,23 @@ export function ServerTable({
         return filteredData;
     }, [data, filterValue]);
 
-    
+
     const sortedItems = React.useMemo(() => {
         return [...filteredItems].sort((a, b) => {
             const first = a[sortDescriptor.column];
             const second = b[sortDescriptor.column];
             const cmp = first < second ? -1 : first > second ? 1 : 0;
-            
+
             return sortDescriptor.direction === "descending" ? -cmp : cmp;
         });
     }, [sortDescriptor, filteredItems]);
-    
+
     const pages = Math.ceil(sortedItems.length / rowsPerPage);
 
     const items = React.useMemo(() => {
         const start = (page - 1) * rowsPerPage;
         const end = start + rowsPerPage;
-    
+
         return sortedItems.slice(start, end);
     }, [page, sortedItems, rowsPerPage]);
 
@@ -125,12 +125,12 @@ export function ServerTable({
             case "playerCount":
                 return (
                     <div className={`flex gap-2 items-center text-${server.playerCountDevelopment === 'stagnant' ?
-                                    'default-400' :
-                                    server.playerCountDevelopment === 'increasing' ? 'success-400' : 'danger'}`}>
+                        'default-400' :
+                        server.playerCountDevelopment === 'increasing' ? 'success-400' : 'danger'}`}>
                         <ArrowIcon
                             className={`size-6 
                             ${server.playerCountDevelopment !== 'stagnant' ? (server.playerCountDevelopment === 'increasing' ? '-rotate-45' : 'rotate-45') : ''}`} />
-                            {cellValue}
+                        {cellValue}
                     </div>
                 )
             case "dailyPeak":

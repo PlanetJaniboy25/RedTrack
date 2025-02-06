@@ -3,60 +3,60 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { PlusIcon } from "@/components/icons";
 import { Preferences } from '@capacitor/preferences';
-import {useRouter} from "next/router";
-import {TrashIcon} from "lucide-react";
-import {Capacitor} from "@capacitor/core";
+import { useRouter } from "next/router";
+import { TrashIcon } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 
 export default function Home() {
   async function deleteServer(index: any) {
-    let servers = JSON.parse((await Preferences.get({key: "servers"})).value || "[]");
+    let servers = JSON.parse((await Preferences.get({ key: "servers" })).value || "[]");
     servers.splice(index, 1);
-    await Preferences.set({key: "servers", value: JSON.stringify(servers)});
+    await Preferences.set({ key: "servers", value: JSON.stringify(servers) });
     setServers(servers);
 
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     try {
-        e.preventDefault();
-        setSubmitting(true)
-        const form = e.currentTarget;
-        const data = new FormData(form);
-        const url = data.get("url") as string;
-        const response = await fetch(url + "/api/auth/startSession", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                name: data.get("username"),
-                password: data.get("password")
-            }),
+      e.preventDefault();
+      setSubmitting(true)
+      const form = e.currentTarget;
+      const data = new FormData(form);
+      const url = data.get("url") as string;
+      const response = await fetch(url + "/api/auth/startSession", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: data.get("username"),
+          password: data.get("password")
+        }),
+      });
+
+      setSubmitting(false)
+
+      if (!response.ok) {
+        setLoginError(response.statusText + " - " + response.status);
+        return;
+      }
+
+      const json = await response.json();
+      if (json.success) {
+        let servers = JSON.parse((await Preferences.get({ key: "servers" })).value || "[]");
+        servers.push({
+          url: url,
+          token: json.sessionId
         });
-
-        setSubmitting(false)
-
-        if(!response.ok) {
-            setLoginError(response.statusText + " - " + response.status);
-            return;
-        }
-
-        const json = await response.json();
-        if (json.success) {
-            let servers = JSON.parse((await Preferences.get({key: "servers"})).value || "[]");
-            servers.push({
-                url: url,
-                token: json.sessionId
-            });
-            await Preferences.set({key: "servers", value: JSON.stringify(servers)});
-            setServers(servers);
-            setPage(0);
-        } else {
-            setLoginError(json.message);
-        }
-    } catch (error : any) {
-        setSubmitting(false)
-        setLoginError(error.message);
+        await Preferences.set({ key: "servers", value: JSON.stringify(servers) });
+        setServers(servers);
+        setPage(0);
+      } else {
+        setLoginError(json.message);
+      }
+    } catch (error: any) {
+      setSubmitting(false)
+      setLoginError(error.message);
     }
   }
 
@@ -68,9 +68,9 @@ export default function Home() {
   let router = useRouter();
 
   useEffect(() => {
-      Preferences.get({key: "servers"}).then(data => {
-          setServers(data.value ? JSON.parse(data.value) : []);
-      })
+    Preferences.get({ key: "servers" }).then(data => {
+      setServers(data.value ? JSON.parse(data.value) : []);
+    })
   }, []);
 
   return (
@@ -92,18 +92,18 @@ export default function Home() {
                 {
                   servers.map((server: any, index: any) => (
                     <div className="inline-flex gap-2">
-                        <Button key={index} variant="bordered" className="w-full" onPress={() => {
-                            //reload the page
-                            if(!Capacitor.isNativePlatform()) router.reload()
-                            router.push("/dashboard?server=" + index);
-                        }}>
-                            {server.url}
-                        </Button>
-                        <Button key={"del" + index} variant="flat" color="danger" className="w-1/6" onPress={() => {
-                            deleteServer(index);
-                        }}>
-                            <TrashIcon width={25} />
-                        </Button>
+                      <Button key={index} variant="bordered" className="w-full" onPress={() => {
+                        //reload the page
+                        if (!Capacitor.isNativePlatform()) router.reload()
+                        router.push("/dashboard?server=" + index);
+                      }}>
+                        {server.url}
+                      </Button>
+                      <Button key={"del" + index} variant="flat" color="danger" className="w-1/6" onPress={() => {
+                        deleteServer(index);
+                      }}>
+                        <TrashIcon width={25} />
+                      </Button>
                     </div>
                   ))
                 }

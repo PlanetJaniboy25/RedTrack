@@ -1,9 +1,9 @@
 import { ping } from "bedrock-protocol";
-import {ServerData} from "../../../types/ServerData";
+import { ServerData } from "../../../types/ServerData";
 import Server from '../models/Server';
 import Pings from "../models/Pings";
 
-async function pingServer(data : ServerData) {
+async function pingServer(data: ServerData) {
     try {
         let pingData = await ping({
             host: data.ip.valueOf(),
@@ -11,7 +11,7 @@ async function pingServer(data : ServerData) {
         })
 
         return pingData?.playersOnline;
-    } catch(e) {
+    } catch (e) {
         return 0;
     }
 }
@@ -19,11 +19,11 @@ async function pingServer(data : ServerData) {
 async function pingAll() {
     let data = {} as any;
 
-    for(let s in (await Server.find())) {
+    for (let s in (await Server.find())) {
         try {
             let srv = (await Server.find())[s];
-            data[srv._id.toString()] = await pingServer({ip: srv.ip, port: srv.port, name: srv.name, serverId: srv._id} as any as ServerData);
-        } catch(e) {}
+            data[srv._id.toString()] = await pingServer({ ip: srv.ip, port: srv.port, name: srv.name, serverId: srv._id } as any as ServerData);
+        } catch (e) { }
     }
 
     await new Pings({

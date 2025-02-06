@@ -10,17 +10,17 @@ import {
     Input,
 } from "@heroui/react";
 
-import {PlusIcon} from "@/components/icons";
+import { PlusIcon } from "@/components/icons";
 
 export function AddServer({
-                              url,
-                              token
-                          }: {
+    url,
+    token
+}: {
     url: string,
     token: string
 }) {
 
-    const {isOpen, onOpen, onOpenChange} = useDisclosure();
+    const { isOpen, onOpen, onOpenChange } = useDisclosure();
     const [serverName, setServerName] = React.useState("");
     const [serverIP, setServerIP] = React.useState("");
     const [serverPort, setServerPort] = React.useState("");
@@ -48,17 +48,17 @@ export function AddServer({
                 },
                 body: JSON.stringify(formData)
             }).then(d => d.json()).then(data => {
-               if(data.error) setError(data.error);
-               else onOpenChange();
+                if (data.error) setError(data.error);
+                else onOpenChange();
             });
-        } catch (e : any) {
+        } catch (e: any) {
             setError(e.toString());
         }
     };
 
     return (
         <>
-            <Button color="primary" onPress={onOpen} endContent={<PlusIcon/>}>
+            <Button color="primary" onPress={onOpen} endContent={<PlusIcon />}>
                 Add server
             </Button>
             <Modal isOpen={isOpen} onOpenChange={() => {
@@ -93,7 +93,7 @@ export function AddServer({
                                 />
                             </ModalBody>
                             <ModalFooter>
-                            <Button color="danger" variant="flat" onPress={onClose}>
+                                <Button color="danger" variant="flat" onPress={onClose}>
                                     Close
                                 </Button>
                                 <Button color="primary" onPress={handleAddServer}>
