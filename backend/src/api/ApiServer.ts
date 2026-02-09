@@ -6,7 +6,7 @@ import Sessions from "../models/Sessions";
 import Users from "../models/Users";
 
 const app = express();
-const port = 3001;
+const port = Number(process.env.backend_port) || 3001;
 
 app.use(cors({
   origin: "*",  // Allows all origins
@@ -45,7 +45,8 @@ async function requiresAuth(req: Request, res: Response, next: Function) {
 
   let sessionToken = req.headers.authorization.split(' ')[1];
 
-  let session = await Sessions.findOne({ token: sessionToken, /*expiresAt: { $gt: new Date() }*/ }); //TODO: add expiresAt check
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  let session = await Sessions.findOne({ token: sessionToken, expiresAt: { $gt: nowSeconds } });
   if (!session) {
     res.status(401).send({ message: 'Unauthorized' });
     return
