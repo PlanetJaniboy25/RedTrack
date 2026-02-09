@@ -138,7 +138,11 @@ export default function Dashboard() {
         }
 
         const json = await response.json();
-        setCurrentUser(json);
+        setCurrentUser({
+            id: json.id,
+            name: json.name,
+            permissions: Number(json.permissions)
+        });
     };
 
     const loadServerDetails = async (activeUrl: string, activeToken: string) => {

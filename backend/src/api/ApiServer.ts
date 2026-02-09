@@ -10,7 +10,7 @@ const port = Number(process.env.backend_port) || 3001;
 
 app.use(cors({
   origin: "*",  // Allows all origins
-  methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"], // Allowed methods
   allowedHeaders: ["Content-Type", "Authorization"] // Allowed headers
 }));
 app.options("*", cors());
