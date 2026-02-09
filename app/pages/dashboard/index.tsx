@@ -77,6 +77,22 @@ export default function Dashboard() {
     const rangeMs = 12 * 60 * 60 * 1000;
     const pingRate = 10000;
 
+    const fromDateRef = useRef(fromDate);
+    const toDateRef = useRef(toDate);
+    const dateOverriddenRef = useRef(dateOverridden);
+
+    useEffect(() => {
+        fromDateRef.current = fromDate;
+    }, [fromDate]);
+
+    useEffect(() => {
+        toDateRef.current = toDate;
+    }, [toDate]);
+
+    useEffect(() => {
+        dateOverriddenRef.current = dateOverridden;
+    }, [dateOverridden]);
+
     const canAddServer = currentUser ? hasPermission(currentUser.permissions, Permissions.ADD_SERVER) : false;
     const canManageServers = currentUser ? hasPermission(currentUser.permissions, Permissions.SERVER_MANAGEMENT) : false;
     const canManageUsers = currentUser ? hasPermission(currentUser.permissions, Permissions.USER_MANAGEMENT) : false;
@@ -635,18 +651,3 @@ export default function Dashboard() {
         </>
     );
 }
-    const fromDateRef = useRef(fromDate);
-    const toDateRef = useRef(toDate);
-    const dateOverriddenRef = useRef(dateOverridden);
-
-    useEffect(() => {
-        fromDateRef.current = fromDate;
-    }, [fromDate]);
-
-    useEffect(() => {
-        toDateRef.current = toDate;
-    }, [toDate]);
-
-    useEffect(() => {
-        dateOverriddenRef.current = dateOverridden;
-    }, [dateOverridden]);
