@@ -343,76 +343,78 @@ export function ServerTable({
     }, [items.length, page, pages, hasSearchFilter]);
 
     return (
-        <Table
-            isHeaderSticky
-            aria-label="Table containing all added servers"
-            bottomContent={bottomContent}
-            bottomContentPlacement="outside"
-            classNames={{
-                wrapper: "max-h-[382px]",
-            }}
-            // @ts-ignore
-            sortDescriptor={sortDescriptor}
-            topContent={topContent}
-            topContentPlacement="outside"
-            // @ts-ignore
-            onSortChange={setSortDescriptor}
-        >
-            <TableHeader columns={headerColumns}>
-                {(column) => (
-                    <TableColumn
-                        key={column.uid}
-                        allowsSorting={column.sortable}
-                    >
-                        {column.name}
-                    </TableColumn>
-                )}
-            </TableHeader>
-            <TableBody emptyContent={"No data found"} items={items}>
-                {(item) => (
-                    <TableRow key={item.internalId}>
-                        {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-                    </TableRow>
-                )}
-            </TableBody>
-        </Table>
-        <Modal isOpen={!!editServerId} onOpenChange={() => setEditServerId(null)} placement="top-center">
-            <ModalContent>
-                {(onClose) => (
-                    <>
-                        <ModalHeader className="flex flex-col gap-1">Edit server</ModalHeader>
-                        <ModalBody>
-                            {editError ? <p className="text-red-500">{editError}</p> : null}
-                            <Input
-                                label="Server Name"
-                                variant="bordered"
-                                value={editName}
-                                onChange={(e) => setEditName(e.target.value)}
-                            />
-                            <Input
-                                label="Server Address"
-                                variant="bordered"
-                                value={editIP}
-                                onChange={(e) => setEditIP(e.target.value)}
-                            />
-                            <Input
-                                label="Port"
-                                variant="bordered"
-                                value={editPort}
-                                onChange={(e) => setEditPort(e.target.value)}
-                            />
-                        </ModalBody>
-                        <ModalFooter>
-                            <Button variant="flat" onPress={onClose} isDisabled={isSaving}>
-                                Cancel
-                            </Button>
-                            <Button color="primary" onPress={handleSaveEdit} isLoading={isSaving}>
-                                Save
-                            </Button>
-                        </ModalFooter>
-                    </>
-                )}
-            </ModalContent>
-        </Modal>
+        <>
+            <Table
+                isHeaderSticky
+                aria-label="Table containing all added servers"
+                bottomContent={bottomContent}
+                bottomContentPlacement="outside"
+                classNames={{
+                    wrapper: "max-h-[382px]",
+                }}
+                // @ts-ignore
+                sortDescriptor={sortDescriptor}
+                topContent={topContent}
+                topContentPlacement="outside"
+                // @ts-ignore
+                onSortChange={setSortDescriptor}
+            >
+                <TableHeader columns={headerColumns}>
+                    {(column) => (
+                        <TableColumn
+                            key={column.uid}
+                            allowsSorting={column.sortable}
+                        >
+                            {column.name}
+                        </TableColumn>
+                    )}
+                </TableHeader>
+                <TableBody emptyContent={"No data found"} items={items}>
+                    {(item) => (
+                        <TableRow key={item.internalId}>
+                            {(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+                        </TableRow>
+                    )}
+                </TableBody>
+            </Table>
+            <Modal isOpen={!!editServerId} onOpenChange={() => setEditServerId(null)} placement="top-center">
+                <ModalContent>
+                    {(onClose) => (
+                        <>
+                            <ModalHeader className="flex flex-col gap-1">Edit server</ModalHeader>
+                            <ModalBody>
+                                {editError ? <p className="text-red-500">{editError}</p> : null}
+                                <Input
+                                    label="Server Name"
+                                    variant="bordered"
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                />
+                                <Input
+                                    label="Server Address"
+                                    variant="bordered"
+                                    value={editIP}
+                                    onChange={(e) => setEditIP(e.target.value)}
+                                />
+                                <Input
+                                    label="Port"
+                                    variant="bordered"
+                                    value={editPort}
+                                    onChange={(e) => setEditPort(e.target.value)}
+                                />
+                            </ModalBody>
+                            <ModalFooter>
+                                <Button variant="flat" onPress={onClose} isDisabled={isSaving}>
+                                    Cancel
+                                </Button>
+                                <Button color="primary" onPress={handleSaveEdit} isLoading={isSaving}>
+                                    Save
+                                </Button>
+                            </ModalFooter>
+                        </>
+                    )}
+                </ModalContent>
+            </Modal>
+        </>
     );
 }
