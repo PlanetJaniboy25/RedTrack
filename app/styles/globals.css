@@ -39,7 +39,7 @@ body {
   -ms-animation: 3s blink ease infinite;
   -o-animation: 3s blink ease infinite;
   -webkit-animation: 3s blink ease infinite;
-  animation: 3s blink ease infinite; 
+  animation: 3s blink ease infinite;
 }
 
 @keyframes blink {
@@ -98,6 +98,6 @@ body {
     opacity: 1;
   }
   70% {
-    opacity: 1; 
+    opacity: 1;
   }
 }
