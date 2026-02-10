@@ -92,7 +92,9 @@ export default function Dashboard() {
         base: "my-2 sm:my-8",
     };
 
-    const liveRangeMs = 6 * 60 * 60 * 1000;
+    const liveRangeOptions = [1, 2, 4, 8, 12, 24] as const;
+    const [liveRangeHours, setLiveRangeHours] = useState<typeof liveRangeOptions[number]>(1);
+    const liveRangeMs = liveRangeHours * 60 * 60 * 1000;
     const rangeShiftMs = 2 * 60 * 60 * 1000;
     const pingRate = 10000;
 
@@ -120,6 +122,7 @@ export default function Dashboard() {
     const fromDateRef = useRef(fromDate);
     const toDateRef = useRef(toDate);
     const dateOverriddenRef = useRef(dateOverridden);
+    const liveRangeMsRef = useRef(liveRangeMs);
     const [customFromInput, setCustomFromInput] = useState(formatDateTimeLocal(fromDate));
     const [customToInput, setCustomToInput] = useState(formatDateTimeLocal(toDate));
     const [rangeError, setRangeError] = useState("");
@@ -135,6 +138,10 @@ export default function Dashboard() {
     useEffect(() => {
         dateOverriddenRef.current = dateOverridden;
     }, [dateOverridden]);
+
+    useEffect(() => {
+        liveRangeMsRef.current = liveRangeMs;
+    }, [liveRangeMs]);
 
     useEffect(() => {
         setCustomFromInput(formatDateTimeLocal(fromDate));
@@ -206,6 +213,20 @@ export default function Dashboard() {
         setRangeError("");
         const rangeNow = Date.now();
         const liveFrom = rangeNow - liveRangeMs;
+        const liveTo = rangeNow;
+        setFromDate(liveFrom);
+        setToDate(liveTo);
+        fromDateRef.current = liveFrom;
+        toDateRef.current = liveTo;
+        await fetchChartRange(url, token, liveFrom, liveTo);
+    };
+
+    const handleLiveRangeChange = async (hours: typeof liveRangeOptions[number]) => {
+        setLiveRangeHours(hours);
+        if (!url || !token || dateOverriddenRef.current) return;
+
+        const rangeNow = Date.now();
+        const liveFrom = rangeNow - hours * 60 * 60 * 1000;
         const liveTo = rangeNow;
         setFromDate(liveFrom);
         setToDate(liveTo);
@@ -519,7 +540,7 @@ export default function Dashboard() {
 
                 if (tok != null && ur != null) {
                     const now = Date.now();
-                    const effectiveFrom = dateOverriddenRef.current ? fromDateRef.current : now - liveRangeMs;
+                    const effectiveFrom = dateOverriddenRef.current ? fromDateRef.current : now - liveRangeMsRef.current;
                     const effectiveTo = dateOverriddenRef.current ? toDateRef.current : now;
 
                     if (!dateOverriddenRef.current) {
@@ -691,6 +712,20 @@ export default function Dashboard() {
                             <Button size="sm" color="primary" variant="flat" onPress={handleRangeReset}>
                                 Now
                             </Button>
+                            <label className="flex items-center gap-2">
+                                <span className="text-blueGray-100">Live window</span>
+                                <select
+                                    className="rounded-small border border-default-300 bg-default-100 px-2 py-1 text-xs text-foreground"
+                                    value={liveRangeHours}
+                                    onChange={(event) => handleLiveRangeChange(Number(event.target.value) as typeof liveRangeOptions[number])}
+                                >
+                                    {liveRangeOptions.map((hours) => (
+                                        <option key={hours} value={hours}>
+                                            {hours}h
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             {!isLiveRange ? (
                                 <span className="text-blueGray-100">Custom range</span>
                             ) : (
