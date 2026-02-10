@@ -496,7 +496,9 @@ export default function Dashboard() {
         }, pingRate);
 
         console.log("pirst ping")
-        reloadData();
+        reloadData().catch((error) => {
+            console.log(error);
+        });
 
         return () => clearInterval(intervalId);
     }, [router.query, router]);
@@ -517,24 +519,25 @@ export default function Dashboard() {
 
     useEffect(() => {
         if (!token || !url) return;
-        loadCurrentUser(url, token);
+        loadCurrentUser(url, token).catch((error) => {
+            console.log(error);
+        });
     }, [token, url]);
 
     useEffect(() => {
         if (!token || !url || !currentUser) return;
         if (hasPermission(currentUser.permissions, Permissions.SERVER_MANAGEMENT)) {
-            loadServerDetails(url, token);
+            loadServerDetails(url, token).catch((error) => {
+                console.log(error);
+            });
         }
         if (hasPermission(currentUser.permissions, Permissions.USER_MANAGEMENT)) {
-            loadUsers(url, token);
+            loadUsers(url, token).catch((error) => {
+                console.log(error);
+            });
         }
     }, [currentUser, token, url]);
 
-
-    if (!token) {
-        return (<div className="flex flex-col items-center justify-center py-2 h-screen min-w-96 w-96 max-w-96">Loading
-            server...</div>)
-    }
 
     if (!backendReachable) {
         return (
@@ -555,6 +558,11 @@ export default function Dashboard() {
                 </Card>
             </div>
         );
+    }
+
+    if (!token) {
+        return (<div className="flex flex-col items-center justify-center py-2 h-screen min-w-96 w-96 max-w-96">Loading
+            server...</div>)
     }
 
     return (
