@@ -50,7 +50,7 @@ export default function Dashboard() {
     let [tableData, setTableData] = useState<TableRow[]>([]);
     let [backendReachable, setBackendReachable] = useState(true);
     let [backendError, setBackendError] = useState("");
-    let [fromDate, setFromDate] = useState(new Date().getTime() - 60 * 1000 * 60 * 3)
+    let [fromDate, setFromDate] = useState(new Date().getTime() - 60 * 1000 * 60 * 1)
     let [toDate, setToDate] = useState(new Date().getTime());
     let [dateOverridden, setDateOverridden] = useState(false);
     let [currentUser, setCurrentUser] = useState<{ id: string; name: string; permissions: number } | null>(null);
@@ -83,7 +83,7 @@ export default function Dashboard() {
         addServer: false,
     });
 
-    const rangeMs = 3 * 60 * 60 * 1000;
+    const rangeMs = 1 * 60 * 60 * 1000;
     const pingRate = 10000;
 
     const fromDateRef = useRef(fromDate);
@@ -601,10 +601,10 @@ export default function Dashboard() {
                     <div className="flex w-full flex-col gap-2 text-xs text-blueGray-100">
                         <div className="flex flex-wrap items-center gap-2">
                             <Button size="sm" variant="flat" onPress={() => handleRangeShift("prev")}>
-                                Previous 3h
+                                Previous hour
                             </Button>
                             <Button size="sm" variant="flat" isDisabled={!canGoToNextRange} onPress={() => handleRangeShift("next")}>
-                                Next 3h
+                                Next hour
                             </Button>
                             <Button size="sm" color="primary" variant="flat" onPress={handleRangeReset}>
                                 Now
