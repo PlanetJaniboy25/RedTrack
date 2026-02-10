@@ -20,9 +20,7 @@ export default function Home() {
     servers.splice(index, 1);
     await Preferences.set({ key: "servers", value: JSON.stringify(servers) });
     setServers(servers);
-
   }
-
 
   function getBackendHost(address: string) {
     try {
