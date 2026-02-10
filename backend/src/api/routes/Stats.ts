@@ -172,7 +172,7 @@ router.get('/prediction/:serverId', requiresAuth, async (req: Request, res: Resp
 
     const { serverId } = req.params;
     const now = Date.now();
-    const historyWindowMs = 48 * 60 * 60 * 1000;
+    const historyWindowMs = 7 * 24 * 60 * 60 * 1000;
     const bucketSizeMs = 5 * 60 * 1000;
 
     const points = await Pings.aggregate([

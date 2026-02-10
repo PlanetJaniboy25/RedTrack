@@ -94,7 +94,7 @@ export function ServerTable({
     const [predictionSeries, setPredictionSeries] = React.useState<PredictionPoint[]>([]);
     const [predictionError, setPredictionError] = React.useState("");
     const [isPredicting, setIsPredicting] = React.useState(false);
-    const [isDarkMode, setIsDarkMode] = React.useState(false);
+    const [isDarkMode, setIsDarkMode] = React.useState(true);
 
     const rowsPerPage = 7;
 
@@ -114,13 +114,16 @@ export function ServerTable({
 
         const root = document.documentElement;
         const detectTheme = () => {
-            setIsDarkMode(root.classList.contains("dark"));
+            const hasDarkClass = !!document.querySelector(".dark");
+            const hasDarkDataTheme = root.getAttribute("data-theme") === "dark";
+            const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            setIsDarkMode(hasDarkClass || hasDarkDataTheme || prefersDark);
         };
 
         detectTheme();
 
         const observer = new MutationObserver(detectTheme);
-        observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+        observer.observe(root, { attributes: true, attributeFilter: ["class", "data-theme"] });
 
         return () => {
             observer.disconnect();
