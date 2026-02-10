@@ -368,10 +368,28 @@ export function ServerTable({
             return acc;
         }, {});
 
+        const groupedByDayHour = points.reduce((acc: Record<string, number[]>, point: { timestamp: number; count: number; }) => {
+            const date = new Date(point.timestamp);
+            const day = date.getDay();
+            const hour = date.getHours();
+            const key = `${day}-${hour}`;
+            if (!acc[key]) {
+                acc[key] = [];
+            }
+            acc[key].push(point.count);
+            return acc;
+        }, {});
+
         const hourlyAverage = Object.keys(groupedByHour).reduce((acc: Record<number, number>, hourKey: string) => {
             const hour = Number(hourKey);
             const values = groupedByHour[hour];
             acc[hour] = values.reduce((sum, value) => sum + value, 0) / values.length;
+            return acc;
+        }, {});
+
+        const dayHourAverage = Object.keys(groupedByDayHour).reduce((acc: Record<string, number>, key: string) => {
+            const values = groupedByDayHour[key];
+            acc[key] = values.reduce((sum, value) => sum + value, 0) / values.length;
             return acc;
         }, {});
 
@@ -383,17 +401,25 @@ export function ServerTable({
 
         const predictionWindow = 24;
         const predictions: PredictionPoint[] = [];
+        const baseDate = new Date(now);
+        baseDate.setMinutes(0, 0, 0);
+        const startOfNextHour = baseDate.getTime() + (60 * 60 * 1000);
 
-        for (let hourOffset = 1; hourOffset <= predictionWindow; hourOffset++) {
-            const futureTimestamp = now + hourOffset * 60 * 60 * 1000;
-            const futureHour = new Date(futureTimestamp).getHours();
+        for (let hourOffset = 0; hourOffset < predictionWindow; hourOffset++) {
+            const futureTimestamp = startOfNextHour + hourOffset * 60 * 60 * 1000;
+            const futureDate = new Date(futureTimestamp);
+            const futureDay = futureDate.getDay();
+            const futureHour = futureDate.getHours();
+            const dayHourKey = `${futureDay}-${futureHour}`;
+            const dayHourBaseline = dayHourAverage[dayHourKey];
             const hourBaseline = hourlyAverage[futureHour] ?? recentAverage;
-            const trendComponent = trendPerHour * hourOffset;
-            const blended = (hourBaseline * 0.75) + ((recentAverage + trendComponent) * 0.25);
+            const baseline = dayHourBaseline ?? hourBaseline;
+            const trendComponent = trendPerHour * (hourOffset + 1);
+            const blended = (baseline * 0.8) + ((recentAverage + trendComponent) * 0.2);
 
             predictions.push({
                 timestamp: futureTimestamp,
-                label: new Date(futureTimestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                label: futureDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
                 predictedPlayers: Math.max(0, Math.round(blended)),
             });
         }
@@ -571,7 +597,7 @@ export function ServerTable({
                 <ModalContent>
                     {(onClose) => (
                         <>
-                            <ModalHeader className="flex flex-col gap-1">Prediction for {predictionTarget?.name}<span className="text-sm font-normal text-default-400">Next 24 hours (hourly)</span></ModalHeader>
+                            <ModalHeader className="flex flex-col gap-1">Prediction for {predictionTarget?.name}<span className="text-sm font-normal text-default-400">Next 24 full hours (hourly)</span></ModalHeader>
                             <ModalBody>
                                 {isPredicting ? <p className="text-default-500">Calculating prediction...</p> : null}
                                 {!isPredicting && predictionError ? <p className="text-red-500">{predictionError}</p> : null}
