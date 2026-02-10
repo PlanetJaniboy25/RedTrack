@@ -25,5 +25,3 @@ It supports:
 - Track online players and trends
 - Manage multiple tracked Minecraft servers
 - Manage users and permissions from the UI
-- Detect backend disconnects and recover automatically when reachable again
-- Deploy frontend as static export (GitHub Pages workflow included)

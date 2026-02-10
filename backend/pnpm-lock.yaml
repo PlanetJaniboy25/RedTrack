@@ -23,6 +23,9 @@ importers:
       express:
         specifier: ^4.21.2
         version: 4.21.2
+      minecraft-server-util:
+        specifier: ^5.4.4
+        version: 5.4.4
       mongoose:
         specifier: ^8.9.5
         version: 8.9.5
@@ -755,6 +758,15 @@ packages:
 
   minecraft-folder-path@1.2.0:
     resolution: {integrity: sha512-qaUSbKWoOsH9brn0JQuBhxNAzTDMwrOXorwuRxdJKKKDYvZhtml+6GVCUrY5HRiEsieBEjCUnhVpDuQiKsiFaw==}
+
+  minecraft-motd-util@1.1.12:
+    resolution: {integrity: sha512-5TuTRjrRupSTruea0nRC37r0FdhkS1O4wIJKAYfwJRCQd/X4Zyl/dVIs96h9UVW6N8jhIuz9pNkrDsqyN7VBdA==}
+    deprecated: no longer maintained
+
+  minecraft-server-util@5.4.4:
+    resolution: {integrity: sha512-uaE0N9PHPtJudi8BlCvKDD9K30w23ZpeS1I53wEJo9nX0HSmg5qFvwj8gMG0CYCUwWH/g5hjKaGAwXXN/vhMJw==}
+    engines: {node: '>=10.0.0'}
+    deprecated: no longer maintained, please use https://mcstatus.io
 
   minimatch@3.1.2:
     resolution: {integrity: sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==}
@@ -2034,6 +2046,12 @@ snapshots:
   minecraft-data@3.83.1: {}
 
   minecraft-folder-path@1.2.0: {}
+
+  minecraft-motd-util@1.1.12: {}
+
+  minecraft-server-util@5.4.4:
+    dependencies:
+      minecraft-motd-util: 1.1.12
 
   minimatch@3.1.2:
     dependencies:
