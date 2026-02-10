@@ -92,6 +92,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@3.4.17)
+      vercel-geist-icons:
+        specifier: ^1.2.2
+        version: 1.2.2(react@19.0.0)
     devDependencies:
       '@capacitor/cli':
         specifier: ^7.0.1
@@ -3901,6 +3904,11 @@ packages:
   vary@1.1.2:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
+
+  vercel-geist-icons@1.2.2:
+    resolution: {integrity: sha512-9F0+tBoSG+q0XiW4jK2tV/Zs8vWPtN/tTKaWTP7NR9kJjWu8aYNo2O5XITFoHiJ3N7JnTniM5CqppyYpYE2cCw==}
+    peerDependencies:
+      react: ^16.x || ^17.x || ^18.x || ^19.0.0 || ^19.0.0-rc
 
   victory-vendor@36.9.2:
     resolution: {integrity: sha512-PnpQQMuxlwYdocC8fIJqVXvkeViHYzotI+NJrCuav0ZYFoq912ZHBk3mCeuj+5/VpodOjPe1z0Fk2ihgzlXqjQ==}
@@ -9041,6 +9049,10 @@ snapshots:
   varname@2.0.3: {}
 
   vary@1.1.2: {}
+
+  vercel-geist-icons@1.2.2(react@19.0.0):
+    dependencies:
+      react: 19.0.0
 
   victory-vendor@36.9.2:
     dependencies:

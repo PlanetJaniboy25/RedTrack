@@ -5,6 +5,7 @@ import { PlusIcon } from "@/components/icons";
 import { Preferences } from '@capacitor/preferences';
 import { useRouter } from "next/router";
 import { PencilIcon, TrashIcon } from "lucide-react";
+import { LogoDiscord } from 'vercel-geist-icons';
 import { Capacitor } from "@capacitor/core";
 
 export default function Home() {
@@ -214,9 +215,24 @@ export default function Home() {
               </div>
             </CardBody>
             <CardFooter>
-              <Button color="default" className="w-full" startContent={<PlusIcon />} variant="faded" onPress={openCreateForm}>
-                Add new server
-              </Button>
+              <div className='flex w-full gap-2'>
+                <Button color="default" className="w-full" startContent={<PlusIcon />} variant="faded" onPress={openCreateForm}>
+                  Add new server
+                </Button>
+                <Button
+                    as="a"
+                    href="https://discord.gg/cTNTrQsJSx"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className='w-1/6'
+                    variant='ghost'
+                    color='default'
+                    isIconOnly
+                    aria-label='Support on Discord'
+                >
+                  <LogoDiscord height={20} width={20} />
+                </Button>
+              </div>
             </CardFooter>
           </Card>
         ) : (<></>)
@@ -225,38 +241,38 @@ export default function Home() {
       {
         page === 1 ? (
             <Card className={"page-card"}>
-            <CardHeader className="flex flex-col items-center gap-3">
-              <Image src="/logo.png" alt="logo" width={112} height={112} className="rounded-lg" />
-              <h1 className="font-bold text-large">{editingIndex === null ? "Add server" : "Edit server"}</h1>
-            </CardHeader>
-            <CardBody>
-              <Form
-                onSubmit={handleSubmit}
-                id={"addform"}
-                validationBehavior="native"
-                className="flex flex-col py-2"
-              >
-                <p className="text-danger">
-                  {loginError}
-                </p>
-                <Input
-                  type="url"
-                  name="url"
-                  value={formValues.url}
-                  onValueChange={(value) => setFormValues((prev) => ({ ...prev, url: value }))}
-                  label={"Backend IP Address"}
-                  placeholder="http://localhost:3000"
-                  errorMessage="Please enter a valid backend address"
-                  labelPlacement="outside"
-                  disabled={submitting}
-                  className="border-25 border-black" />
+              <CardHeader className="flex flex-col items-center gap-3">
+                <Image src="/logo.png" alt="logo" width={112} height={112} className="rounded-lg"/>
+                <h1 className="font-bold text-large">{editingIndex === null ? "Add server" : "Edit server"}</h1>
+              </CardHeader>
+              <CardBody>
+                <Form
+                    onSubmit={handleSubmit}
+                    id={"addform"}
+                    validationBehavior="native"
+                    className="flex flex-col py-2"
+                >
+                  <p className="text-danger">
+                    {loginError}
+                  </p>
+                  <Input
+                      type="url"
+                      name="url"
+                      value={formValues.url}
+                      onValueChange={(value) => setFormValues((prev) => ({...prev, url: value}))}
+                      label={"Backend IP Address"}
+                      placeholder="http://localhost:3000"
+                      errorMessage="Please enter a valid backend address"
+                      labelPlacement="outside"
+                      disabled={submitting}
+                      className="border-25 border-black"/>
 
-                <Input
-                  type="text"
-                  name="serverName"
-                  value={formValues.serverName}
-                  onValueChange={(value) => setFormValues((prev) => ({ ...prev, serverName: value }))}
-                  label={"Server entry name (optional)"}
+                  <Input
+                      type="text"
+                      name="serverName"
+                      value={formValues.serverName}
+                      onValueChange={(value) => setFormValues((prev) => ({...prev, serverName: value}))}
+                      label={"Server entry name (optional)"}
                   placeholder="My Production"
                   labelPlacement="outside"
                   disabled={submitting}
