@@ -48,6 +48,8 @@ export default function Dashboard() {
     } as any);
 
     let [tableData, setTableData] = useState<TableRow[]>([]);
+    let [backendReachable, setBackendReachable] = useState(true);
+    let [backendError, setBackendError] = useState("");
     let [fromDate, setFromDate] = useState(new Date().getTime() - 60 * 1000 * 60 * 3)
     let [toDate, setToDate] = useState(new Date().getTime());
     let [dateOverridden, setDateOverridden] = useState(false);
@@ -110,11 +112,10 @@ export default function Dashboard() {
     const canGoToNextRange = dateOverridden && toDate < now - 5000;
 
     const fetchChartRange = async (baseUrl: string, sessionToken: string, rangeFrom: number, rangeTo: number) => {
-        const response = await fetch(baseUrl + '/api/stats/all?from=' + rangeFrom + '&to=' + rangeTo, {
+        const response = await requestBackend(baseUrl, sessionToken, '/api/stats/all?from=' + rangeFrom + '&to=' + rangeTo, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'authorization': 'Bearer ' + sessionToken
             }
         });
 
@@ -167,12 +168,30 @@ export default function Dashboard() {
         await fetchChartRange(url, token, liveFrom, liveTo);
     };
 
+    const requestBackend = async (activeUrl: string, activeToken: string, path: string, init?: RequestInit) => {
+        try {
+            const response = await fetch(activeUrl + path, {
+                ...init,
+                headers: {
+                    "authorization": "Bearer " + activeToken,
+                    ...(init?.headers || {}),
+                }
+            });
+            setBackendReachable(true);
+            setBackendError("");
+            return response;
+        } catch (error) {
+            setBackendReachable(false);
+            setBackendError(error instanceof Error ? error.message : "Unable to reach backend.");
+            throw error;
+        }
+    };
+
     const loadCurrentUser = async (activeUrl: string, activeToken: string) => {
-        const response = await fetch(activeUrl + "/api/usersmanage/me", {
+        const response = await requestBackend(activeUrl, activeToken, "/api/usersmanage/me", {
             method: "GET",
             headers: {
-                "Content-Type": "application/json",
-                "authorization": "Bearer " + activeToken
+                "Content-Type": "application/json"
             }
         });
 
@@ -189,11 +208,10 @@ export default function Dashboard() {
     };
 
     const loadServerDetails = async (activeUrl: string, activeToken: string) => {
-        const response = await fetch(activeUrl + "/api/servermanage/list", {
+        const response = await requestBackend(activeUrl, activeToken, "/api/servermanage/list", {
             method: "GET",
             headers: {
-                "Content-Type": "application/json",
-                "authorization": "Bearer " + activeToken
+                "Content-Type": "application/json"
             }
         });
 
@@ -214,11 +232,10 @@ export default function Dashboard() {
     };
 
     const loadUsers = async (activeUrl: string, activeToken: string) => {
-        const response = await fetch(activeUrl + "/api/usersmanage/list", {
+        const response = await requestBackend(activeUrl, activeToken, "/api/usersmanage/list", {
             method: "GET",
             headers: {
-                "Content-Type": "application/json",
-                "authorization": "Bearer " + activeToken
+                "Content-Type": "application/json"
             }
         });
         if (!response.ok) return;
@@ -268,11 +285,10 @@ export default function Dashboard() {
 
         setIsAccountSubmitting(true);
         setAccountError("");
-        const response = await fetch(url + "/api/usersmanage/change-password", {
+        const response = await requestBackend(url, token, "/api/usersmanage/change-password", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "authorization": "Bearer " + token
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({ currentPassword, newPassword })
         });
@@ -315,11 +331,10 @@ export default function Dashboard() {
         setIsUserSubmitting(true);
         const permissions = getPermissionsFromSelection(newUserPermissions);
 
-        const response = await fetch(url + "/api/usersmanage/create", {
+        const response = await requestBackend(url, token, "/api/usersmanage/create", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "authorization": "Bearer " + token
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 name: newUserName,
@@ -347,11 +362,10 @@ export default function Dashboard() {
         const shouldDelete = window.confirm("Delete this user?");
         if (!shouldDelete) return;
 
-        await fetch(url + "/api/usersmanage/" + userId, {
+        await requestBackend(url, token, "/api/usersmanage/" + userId, {
             method: "DELETE",
             headers: {
-                "Content-Type": "application/json",
-                "authorization": "Bearer " + token
+                "Content-Type": "application/json"
             }
         });
 
@@ -361,11 +375,10 @@ export default function Dashboard() {
     const handleResetUserPassword = async () => {
         if (!url || !token || !userPasswordTarget) return;
         setIsUserSubmitting(true);
-        const response = await fetch(url + "/api/usersmanage/" + userPasswordTarget.id + "/password", {
+        const response = await requestBackend(url, token, "/api/usersmanage/" + userPasswordTarget.id + "/password", {
             method: "PATCH",
             headers: {
-                "Content-Type": "application/json",
-                "authorization": "Bearer " + token
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({ newPassword: userPassword })
         });
@@ -390,11 +403,10 @@ export default function Dashboard() {
         setIsUserSubmitting(true);
         setUserError("");
 
-        const response = await fetch(url + "/api/usersmanage/" + userPermissionTarget.id + "/permissions", {
+        const response = await requestBackend(url, token, "/api/usersmanage/" + userPermissionTarget.id + "/permissions", {
             method: "PATCH",
             headers: {
-                "Content-Type": "application/json",
-                "authorization": "Bearer " + token
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 permissions: getPermissionsFromSelection(editUserPermissions)
@@ -435,37 +447,36 @@ export default function Dashboard() {
                         setToDate(effectiveTo);
                     }
 
-                    fetch(ur + "/api/stats/latest", {
+                    const response = await requestBackend(ur, tok, "/api/stats/latest", {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
-                            'authorization': 'Bearer ' + tok
                         }
-                    }).then(response => response.json()).then((dat) => {
-                        setTableData((prevTableData) => {
-                            const tableDataMap = prevTableData && prevTableData.length > 0 ? new Map(prevTableData.map((item) => [item.internalId, item])) : null;
-
-                            const updatedData = dat.map((item: TableRow) => {
-                                const previousData = tableDataMap ? tableDataMap.get(item.internalId) : null;
-
-                                let playerCountDevelopment = "stagnant";
-                                if (previousData) {
-                                    if (item.playerCount > previousData.playerCount) {
-                                        playerCountDevelopment = "increasing";
-                                    } else if (item.playerCount < previousData.playerCount) {
-                                        playerCountDevelopment = "decreasing";
-                                    }
-                                }
-
-                                return {
-                                    ...item,
-                                    playerCountDevelopment,
-                                };
-                            });
-
-                            return updatedData;
-                        })
                     });
+                    const dat = await response.json();
+                    setTableData((prevTableData) => {
+                        const tableDataMap = prevTableData && prevTableData.length > 0 ? new Map(prevTableData.map((item) => [item.internalId, item])) : null;
+
+                        const updatedData = dat.map((item: TableRow) => {
+                            const previousData = tableDataMap ? tableDataMap.get(item.internalId) : null;
+
+                            let playerCountDevelopment = "stagnant";
+                            if (previousData) {
+                                if (item.playerCount > previousData.playerCount) {
+                                    playerCountDevelopment = "increasing";
+                                } else if (item.playerCount < previousData.playerCount) {
+                                    playerCountDevelopment = "decreasing";
+                                }
+                            }
+
+                            return {
+                                ...item,
+                                playerCountDevelopment,
+                            };
+                        });
+
+                        return updatedData;
+                    })
 
                     if (!dateOverriddenRef.current) {
                         await fetchChartRange(ur, tok, effectiveFrom, effectiveTo);
@@ -478,10 +489,9 @@ export default function Dashboard() {
     useEffect(() => {
         const intervalId = setInterval(async () => {
             try {
-                reloadData();
+                await reloadData();
             } catch (e) {
                 console.log(e)
-                clearInterval(intervalId)
             }
         }, pingRate);
 
@@ -524,6 +534,27 @@ export default function Dashboard() {
     if (!token) {
         return (<div className="flex flex-col items-center justify-center py-2 h-screen min-w-96 w-96 max-w-96">Loading
             server...</div>)
+    }
+
+    if (!backendReachable) {
+        return (
+            <div className="flex min-h-screen items-center justify-center p-4">
+                <Card className="w-full max-w-xl">
+                    <CardHeader className="flex flex-col items-start gap-1">
+                        <h2 className="text-xl font-semibold">Connection lost</h2>
+                        <p className="text-sm text-default-500">The backend is currently unreachable.</p>
+                    </CardHeader>
+                    <CardBody>
+                        <p className="text-sm text-default-500">{backendError || "Please check the backend status and network connection."}</p>
+                    </CardBody>
+                    <CardFooter>
+                        <Button color="primary" onPress={reloadData}>
+                            Retry now
+                        </Button>
+                    </CardFooter>
+                </Card>
+            </div>
+        );
     }
 
     return (

@@ -214,9 +214,22 @@ export default function Home() {
               </div>
             </CardBody>
             <CardFooter>
-              <Button color="default" className="w-full" startContent={<PlusIcon />} variant="faded" onPress={openCreateForm}>
-                Add new server
-              </Button>
+              <div className='flex w-full flex-col gap-2'>
+                <Button color="default" className="w-full" startContent={<PlusIcon />} variant="faded" onPress={openCreateForm}>
+                  Add new server
+                </Button>
+                <Button
+                  as="a"
+                  href="https://discord.gg/cTNTrQsJSx"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className='w-full'
+                  variant='flat'
+                  color='secondary'
+                >
+                  Support on Discord
+                </Button>
+              </div>
             </CardFooter>
           </Card>
         ) : (<></>)
