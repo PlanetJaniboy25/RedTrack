@@ -20,6 +20,7 @@ import {
     ModalHeader,
     ModalBody,
     ModalFooter,
+    Checkbox,
 } from "@heroui/react";
 
 import { AddServer } from "../server/AddServer";
@@ -54,7 +55,7 @@ export function ServerTable({
     data: any;
     canAddServer: boolean;
     canManageServers: boolean;
-    serverDetails: Record<string, { name: string; ip: string; port: number; color: string }>;
+    serverDetails: Record<string, { name: string; ip: string; port: number; color: string; bedrock: boolean }>;
     onServersChanged: () => void;
 }) {
     const [filterValue, setFilterValue] = React.useState("");
@@ -68,6 +69,7 @@ export function ServerTable({
     const [editName, setEditName] = React.useState("");
     const [editIP, setEditIP] = React.useState("");
     const [editPort, setEditPort] = React.useState("");
+    const [editBedrock, setEditBedrock] = React.useState(true);
     const [editError, setEditError] = React.useState("");
     const [isSaving, setIsSaving] = React.useState(false);
 
@@ -210,6 +212,7 @@ export function ServerTable({
         setEditName(details.name);
         setEditIP(details.ip);
         setEditPort(details.port.toString());
+        setEditBedrock(details.bedrock !== false);
         setEditError("");
     };
 
@@ -243,7 +246,8 @@ export function ServerTable({
             body: JSON.stringify({
                 serverName: editName,
                 serverIP: editIP,
-                serverPort: editPort
+                serverPort: editPort,
+                bedrock: editBedrock
             })
         });
 
@@ -402,6 +406,9 @@ export function ServerTable({
                                     value={editPort}
                                     onChange={(e) => setEditPort(e.target.value)}
                                 />
+                                <Checkbox isSelected={editBedrock} onValueChange={setEditBedrock}>
+                                    Bedrock server (disable for Java)
+                                </Checkbox>
                             </ModalBody>
                             <ModalFooter>
                                 <Button variant="flat" onPress={onClose} isDisabled={isSaving}>
