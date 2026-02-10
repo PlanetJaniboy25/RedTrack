@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { requiresAuth } from "../ApiServer";
 import Pings from "../../models/Pings";
 import Server from "../../models/Server";
+import Permissions from "../../utils/Permissions";
 
 const router = Router();
 
@@ -160,6 +161,74 @@ router.get('/latest', requiresAuth, async (req: Request, res: Response) => {
     }
 
     res.json(data);
+});
+
+router.get('/prediction/:serverId', requiresAuth, async (req: Request, res: Response) => {
+    // @ts-ignore
+    if (!Permissions.hasPermission(req.user.permissions, Permissions.CAN_SEE_PREDICTION)) {
+        res.status(403).json({ error: "You do not have permission to see predictions" });
+        return;
+    }
+
+    const { serverId } = req.params;
+    const now = Date.now();
+    const historyWindowMs = 48 * 60 * 60 * 1000;
+    const bucketSizeMs = 5 * 60 * 1000;
+
+    const points = await Pings.aggregate([
+        {
+            $match: {
+                timestamp: { $gte: now - historyWindowMs },
+                [`data.${serverId}`]: { $exists: true }
+            }
+        },
+        {
+            $project: {
+                timestamp: 1,
+                count: `$data.${serverId}`
+            }
+        },
+        {
+            $group: {
+                _id: {
+                    $floor: {
+                        $divide: ["$timestamp", bucketSizeMs]
+                    }
+                },
+                timestamp: { $max: "$timestamp" },
+                count: { $avg: "$count" }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                timestamp: 1,
+                count: { $round: ["$count", 2] }
+            }
+        },
+        { $sort: { timestamp: 1 } }
+    ]);
+
+    if (points.length < 2) {
+        res.status(422).json({ error: "Not enough data to predict player counts" });
+        return;
+    }
+
+    const coveredTimeMs = points[points.length - 1].timestamp - points[0].timestamp;
+    const minimumCoverageMs = 24 * 60 * 60 * 1000;
+
+    if (coveredTimeMs < minimumCoverageMs) {
+        res.status(422).json({ error: "At least 24 hours of data are required for prediction" });
+        return;
+    }
+
+    res.status(200).json({
+        serverId,
+        points,
+        from: points[0].timestamp,
+        to: points[points.length - 1].timestamp,
+        bucketSizeMs
+    });
 });
 
 export default router;

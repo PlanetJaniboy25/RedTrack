@@ -72,6 +72,7 @@ export default function Dashboard() {
         manageUsers: false,
         addServer: false,
         cannotChangePassword: false,
+        canSeePrediction: false,
     });
     const [userError, setUserError] = useState("");
     const [userPasswordTarget, setUserPasswordTarget] = useState<{ id: string; name: string } | null>(null);
@@ -83,6 +84,7 @@ export default function Dashboard() {
         manageUsers: false,
         addServer: false,
         cannotChangePassword: false,
+        canSeePrediction: false,
     });
 
     const rangeMs = 1 * 60 * 60 * 1000;
@@ -108,6 +110,7 @@ export default function Dashboard() {
     const canManageServers = currentUser ? hasPermission(currentUser.permissions, Permissions.SERVER_MANAGEMENT) : false;
     const canManageUsers = currentUser ? hasPermission(currentUser.permissions, Permissions.USER_MANAGEMENT) : false;
     const canChangeOwnPassword = currentUser ? !hasPermission(currentUser.permissions, Permissions.CANNOT_CHANGE_PASSWORD) : false;
+    const canSeePrediction = currentUser ? hasPermission(currentUser.permissions, Permissions.CAN_SEE_PREDICTION) : false;
 
     const formatRange = (value: number) => new Date(value).toLocaleString();
     const now = Date.now();
@@ -310,12 +313,13 @@ export default function Dashboard() {
         setIsAccountModalOpen(false);
     };
 
-    const getPermissionsFromSelection = (selection: { manageServers: boolean; manageUsers: boolean; addServer: boolean; cannotChangePassword: boolean; }) => {
+    const getPermissionsFromSelection = (selection: { manageServers: boolean; manageUsers: boolean; addServer: boolean; cannotChangePassword: boolean; canSeePrediction: boolean; }) => {
         const permissions =
             (selection.manageServers ? Permissions.SERVER_MANAGEMENT : 0) |
             (selection.manageUsers ? Permissions.USER_MANAGEMENT : 0) |
             (selection.addServer ? Permissions.ADD_SERVER : 0) |
-            (selection.cannotChangePassword ? Permissions.CANNOT_CHANGE_PASSWORD : 0);
+            (selection.cannotChangePassword ? Permissions.CANNOT_CHANGE_PASSWORD : 0) |
+            (selection.canSeePrediction ? Permissions.CAN_SEE_PREDICTION : 0);
 
         return normalizePermissions(permissions);
     };
@@ -327,6 +331,7 @@ export default function Dashboard() {
             manageUsers: hasPermission(normalized, Permissions.USER_MANAGEMENT),
             addServer: hasPermission(normalized, Permissions.ADD_SERVER),
             cannotChangePassword: hasPermission(normalized, Permissions.CANNOT_CHANGE_PASSWORD),
+            canSeePrediction: hasPermission(normalized, Permissions.CAN_SEE_PREDICTION),
         };
     };
 
@@ -357,7 +362,7 @@ export default function Dashboard() {
 
         setNewUserName("");
         setNewUserPassword("");
-        setNewUserPermissions({ manageServers: false, manageUsers: false, addServer: false, cannotChangePassword: false });
+        setNewUserPermissions({ manageServers: false, manageUsers: false, addServer: false, cannotChangePassword: false, canSeePrediction: false });
         setIsUserSubmitting(false);
         await loadUsers(url, token);
     };
@@ -638,6 +643,7 @@ export default function Dashboard() {
                             data={tableData}
                             canAddServer={canAddServer}
                             canManageServers={canManageServers}
+                            canSeePrediction={canSeePrediction}
                             serverDetails={serverDetails}
                             onServersChanged={() => {
                                 if (url && token && canManageServers) {
@@ -762,6 +768,14 @@ export default function Dashboard() {
                                         >
                                             Cannot change password
                                         </Checkbox>
+                                        <Checkbox
+                                            isSelected={newUserPermissions.canSeePrediction}
+                                            onValueChange={(value) =>
+                                                setNewUserPermissions((prev) => ({ ...prev, canSeePrediction: value }))
+                                            }
+                                        >
+                                            Can see prediction
+                                        </Checkbox>
                                     </div>
                                 </div>
                                 <div>
@@ -866,6 +880,14 @@ export default function Dashboard() {
                                     }
                                 >
                                     Cannot change password
+                                </Checkbox>
+                                <Checkbox
+                                    isSelected={editUserPermissions.canSeePrediction}
+                                    onValueChange={(value) =>
+                                        setEditUserPermissions((prev) => ({ ...prev, canSeePrediction: value }))
+                                    }
+                                >
+                                    Can see prediction
                                 </Checkbox>
                             </ModalBody>
                             <ModalFooter>

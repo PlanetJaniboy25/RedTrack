@@ -47,6 +47,7 @@ export function ServerTable({
     data,
     canAddServer,
     canManageServers,
+    canSeePrediction,
     serverDetails,
     onServersChanged,
 }: {
@@ -55,6 +56,7 @@ export function ServerTable({
     data: any;
     canAddServer: boolean;
     canManageServers: boolean;
+    canSeePrediction: boolean;
     serverDetails: Record<string, { name: string; ip: string; port: number; color: string; bedrock: boolean }>;
     onServersChanged: () => void;
 }) {
@@ -72,24 +74,30 @@ export function ServerTable({
     const [editBedrock, setEditBedrock] = React.useState(true);
     const [editError, setEditError] = React.useState("");
     const [isSaving, setIsSaving] = React.useState(false);
+    const [predictionTarget, setPredictionTarget] = React.useState<{ id: string; name: string } | null>(null);
+    const [predictionResult, setPredictionResult] = React.useState<number | null>(null);
+    const [predictionError, setPredictionError] = React.useState("");
+    const [isPredicting, setIsPredicting] = React.useState(false);
 
     const rowsPerPage = 7;
 
     const hasSearchFilter = Boolean(filterValue);
 
     React.useEffect(() => {
-        if (canManageServers) {
-            setVisibleColumns(new Set([...INITIAL_VISIBLE_COLUMNS, "actions"]));
+        const baseVisibleColumns = [...INITIAL_VISIBLE_COLUMNS];
+        if (canSeePrediction || canManageServers) {
+            baseVisibleColumns.push("actions");
         }
-    }, [canManageServers]);
+        setVisibleColumns(new Set(baseVisibleColumns));
+    }, [canManageServers, canSeePrediction]);
 
     const tableColumns = React.useMemo(() => {
         const columns = [...baseColumns];
-        if (canManageServers) {
+        if (canSeePrediction || canManageServers) {
             columns.push({ name: "Actions", uid: "actions", sortable: false });
         }
         return columns;
-    }, [canManageServers]);
+    }, [canManageServers, canSeePrediction]);
 
     const headerColumns = React.useMemo(() => {
         // @ts-ignore
@@ -189,18 +197,27 @@ export function ServerTable({
             case "actions":
                 return (
                     <div className="flex gap-2">
-                        <Button size="sm" variant="flat" onPress={() => handleEdit(server.internalId)}>
-                            Edit
-                        </Button>
-                        <Button size="sm" color="danger" variant="flat" onPress={() => handleDelete(server.internalId)}>
-                            Delete
-                        </Button>
+                        {canSeePrediction ? (
+                            <Button size="sm" color="secondary" variant="flat" onPress={() => handlePredict(server.internalId, server.server)}>
+                                Predict
+                            </Button>
+                        ) : null}
+                        {canManageServers ? (
+                            <>
+                                <Button size="sm" variant="flat" onPress={() => handleEdit(server.internalId)}>
+                                    Edit
+                                </Button>
+                                <Button size="sm" color="danger" variant="flat" onPress={() => handleDelete(server.internalId)}>
+                                    Delete
+                                </Button>
+                            </>
+                        ) : null}
                     </div>
                 )
             default:
                 return cellValue;
         }
-    }, [serverDetails]);
+    }, [canManageServers, canSeePrediction, serverDetails]);
 
     const handleEdit = (serverId: string) => {
         const details = serverDetails[serverId];
@@ -214,6 +231,72 @@ export function ServerTable({
         setEditPort(details.port.toString());
         setEditBedrock(details.bedrock !== false);
         setEditError("");
+    };
+
+
+    const handlePredict = async (serverId: string, serverName: string) => {
+        if (!url || !canSeePrediction) return;
+
+        setPredictionTarget({ id: serverId, name: serverName });
+        setPredictionResult(null);
+        setPredictionError("");
+        setIsPredicting(true);
+
+        const response = await fetch(url + "/api/stats/prediction/" + serverId, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": "Bearer " + token
+            }
+        });
+
+        const json = await response.json();
+        if (!response.ok) {
+            setPredictionError(json.error || "Unable to predict player count.");
+            setIsPredicting(false);
+            return;
+        }
+
+        const points = Array.isArray(json.points) ? json.points : [];
+        const minimumCoverageMs = 24 * 60 * 60 * 1000;
+
+        if (points.length < 2) {
+            setPredictionError("Not enough data to predict player count.");
+            setIsPredicting(false);
+            return;
+        }
+
+        const coveredTime = points[points.length - 1].timestamp - points[0].timestamp;
+        if (coveredTime < minimumCoverageMs) {
+            setPredictionError("At least 24 hours of data are required to predict player count.");
+            setIsPredicting(false);
+            return;
+        }
+
+        const now = Date.now();
+        const targetTimestamp = now + 60 * 60 * 1000;
+        const dayAgoTimestamp = targetTimestamp - minimumCoverageMs;
+        const reference = points.reduce((best: any, point: any) => {
+            if (!best) return point;
+            const bestDistance = Math.abs(best.timestamp - dayAgoTimestamp);
+            const currentDistance = Math.abs(point.timestamp - dayAgoTimestamp);
+            return currentDistance < bestDistance ? point : best;
+        }, null);
+
+        if (!reference || typeof reference.count !== "number") {
+            setPredictionError("Unable to predict from available data.");
+            setIsPredicting(false);
+            return;
+        }
+
+        const recentPoints = points.filter((point: any) => point.timestamp >= now - 60 * 60 * 1000);
+        const recentAverage = recentPoints.length > 0
+            ? recentPoints.reduce((sum: number, point: any) => sum + Number(point.count || 0), 0) / recentPoints.length
+            : Number(points[points.length - 1]?.count || 0);
+
+        const predicted = Math.max(0, Math.round((reference.count * 0.7) + (recentAverage * 0.3)));
+        setPredictionResult(predicted);
+        setIsPredicting(false);
     };
 
     const handleDelete = async (serverId: string) => {
@@ -381,6 +464,25 @@ export function ServerTable({
                     )}
                 </TableBody>
             </Table>
+            <Modal isOpen={!!predictionTarget} onOpenChange={() => setPredictionTarget(null)} placement="top-center">
+                <ModalContent>
+                    {(onClose) => (
+                        <>
+                            <ModalHeader className="flex flex-col gap-1">Prediction for {predictionTarget?.name}</ModalHeader>
+                            <ModalBody>
+                                {isPredicting ? <p>Calculating prediction...</p> : null}
+                                {!isPredicting && predictionError ? <p className="text-red-500">error: {predictionError}</p> : null}
+                                {!isPredicting && !predictionError && predictionResult !== null ? (
+                                    <p className="text-lg">Predicted players in ~1 hour: <strong>{predictionResult}</strong></p>
+                                ) : null}
+                            </ModalBody>
+                            <ModalFooter>
+                                <Button variant="flat" onPress={onClose}>Close</Button>
+                            </ModalFooter>
+                        </>
+                    )}
+                </ModalContent>
+            </Modal>
             <Modal isOpen={!!editServerId} onOpenChange={() => setEditServerId(null)} placement="top-center">
                 <ModalContent>
                     {(onClose) => (
