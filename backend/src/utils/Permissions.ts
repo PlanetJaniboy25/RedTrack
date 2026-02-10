@@ -3,8 +3,9 @@ export default class Permissions {
     public static USER_MANAGEMENT = 0x2;
     public static ADD_SERVER = 0x4;
     public static CANNOT_CHANGE_PASSWORD = 0x8;
+    public static CAN_SEE_PREDICTION = 0x10;
 
-    public static all = Permissions.SERVER_MANAGEMENT | Permissions.USER_MANAGEMENT | Permissions.ADD_SERVER;
+    public static all = Permissions.SERVER_MANAGEMENT | Permissions.USER_MANAGEMENT | Permissions.ADD_SERVER | Permissions.CAN_SEE_PREDICTION;
     public static none = 0;
 
     public static hasPermission(permissions: number, permission: number) {

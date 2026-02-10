@@ -29,6 +29,11 @@ export function AddServer({
     const [error, setError] = React.useState("");
     const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+    const modalClassNames = {
+        wrapper: "items-start p-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:items-center sm:p-6",
+        base: "my-2 sm:my-8",
+    };
+
     const resetForm = () => {
         setServerName("");
         setServerIP("");
@@ -105,10 +110,15 @@ export function AddServer({
             <Button color="primary" onPress={onOpen} endContent={<PlusIcon />}>
                 Add server
             </Button>
-            <Modal isOpen={isOpen} onOpenChange={() => {
-                onOpenChange();
-                resetForm();
-            }} placement="top-center">
+            <Modal
+                isOpen={isOpen}
+                onOpenChange={() => {
+                    onOpenChange();
+                    resetForm();
+                }}
+                placement="top-center"
+                classNames={modalClassNames}
+            >
                 <ModalContent>
                     {(onClose) => (
                         <>
