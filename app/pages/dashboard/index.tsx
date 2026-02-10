@@ -105,30 +105,66 @@ export default function Dashboard() {
     const canManageUsers = currentUser ? hasPermission(currentUser.permissions, Permissions.USER_MANAGEMENT) : false;
 
     const formatRange = (value: number) => new Date(value).toLocaleString();
+    const now = Date.now();
+    const isLiveRange = !dateOverridden;
+    const canGoToNextRange = dateOverridden && toDate < now - 5000;
 
-    const handleRangeShift = (direction: "prev" | "next") => {
-        setDateOverridden(true);
-        const now = Date.now();
-        if (direction === "prev") {
-            setFromDate((prev) => prev - rangeMs);
-            setToDate((prev) => prev - rangeMs);
-            return;
-        }
+    const fetchChartRange = async (baseUrl: string, sessionToken: string, rangeFrom: number, rangeTo: number) => {
+        const response = await fetch(baseUrl + '/api/stats/all?from=' + rangeFrom + '&to=' + rangeTo, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': 'Bearer ' + sessionToken
+            }
+        });
 
-        setFromDate((prev) => {
-            const nextFrom = prev + rangeMs;
-            return nextFrom > now - rangeMs ? now - rangeMs : nextFrom;
-        });
-        setToDate((prev) => {
-            const nextTo = prev + rangeMs;
-            return nextTo > now ? now : nextTo;
-        });
+        const dat = await response.json();
+        setData((prev: any) => ({ type: prev.type, from: rangeFrom, to: rangeTo, ...dat }));
     };
 
-    const handleRangeReset = () => {
+    const handleRangeShift = async (direction: "prev" | "next") => {
+        if (!url || !token) return;
+
+        const currentFrom = fromDateRef.current;
+        const currentTo = toDateRef.current;
+        let nextFrom = currentFrom;
+        let nextTo = currentTo;
+        const rangeNow = Date.now();
+
+        if (direction === "prev") {
+            nextFrom = currentFrom - rangeMs;
+            nextTo = currentTo - rangeMs;
+            setDateOverridden(true);
+        } else {
+            nextFrom = Math.min(currentFrom + rangeMs, rangeNow - rangeMs);
+            nextTo = Math.min(currentTo + rangeMs, rangeNow);
+            if (nextTo >= rangeNow - 5000) {
+                nextFrom = rangeNow - rangeMs;
+                nextTo = rangeNow;
+                setDateOverridden(false);
+            } else {
+                setDateOverridden(true);
+            }
+        }
+
+        setFromDate(nextFrom);
+        setToDate(nextTo);
+        fromDateRef.current = nextFrom;
+        toDateRef.current = nextTo;
+        await fetchChartRange(url, token, nextFrom, nextTo);
+    };
+
+    const handleRangeReset = async () => {
+        if (!url || !token) return;
         setDateOverridden(false);
-        setFromDate(Date.now() - rangeMs);
-        setToDate(Date.now());
+        const rangeNow = Date.now();
+        const liveFrom = rangeNow - rangeMs;
+        const liveTo = rangeNow;
+        setFromDate(liveFrom);
+        setToDate(liveTo);
+        fromDateRef.current = liveFrom;
+        toDateRef.current = liveTo;
+        await fetchChartRange(url, token, liveFrom, liveTo);
     };
 
     const loadCurrentUser = async (activeUrl: string, activeToken: string) => {
@@ -401,13 +437,9 @@ export default function Dashboard() {
                         })
                     });
 
-                    fetch(ur + '/api/stats/all?from=' + effectiveFrom + '&to=' + effectiveTo, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'authorization': 'Bearer ' + tok
-                        }
-                    }).then(response => response.json()).then((dat) => setData((prev: any) => ({ type: prev.type, ...dat })))
+                    if (!dateOverriddenRef.current) {
+                        await fetchChartRange(ur, tok, effectiveFrom, effectiveTo);
+                    }
                 }
             }
         });
@@ -480,7 +512,7 @@ export default function Dashboard() {
                     </h2>
                 </CardHeader>
                 <CardBody className="h-full p-0">
-                    <OnlinePlayersChart data={data} />
+                    <OnlinePlayersChart data={data} preserveViewport={!isLiveRange} />
                 </CardBody>
                 <CardFooter>
                     <div className="flex w-full flex-col gap-2 text-xs text-blueGray-100">
@@ -488,13 +520,13 @@ export default function Dashboard() {
                             <Button size="sm" variant="flat" onPress={() => handleRangeShift("prev")}>
                                 Previous 3h
                             </Button>
-                            <Button size="sm" variant="flat" onPress={() => handleRangeShift("next")}>
+                            <Button size="sm" variant="flat" isDisabled={!canGoToNextRange} onPress={() => handleRangeShift("next")}>
                                 Next 3h
                             </Button>
                             <Button size="sm" color="primary" variant="flat" onPress={handleRangeReset}>
                                 Now
                             </Button>
-                            {dateOverridden ? (
+                            {!isLiveRange ? (
                                 <span className="text-blueGray-100">Custom range</span>
                             ) : (
                                 <span className="text-blueGray-100">Live range</span>
