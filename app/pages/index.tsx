@@ -74,12 +74,12 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center py-2 w-full h-screen">
+    <div className="flex min-h-screen w-full items-center justify-center bg-slate-50 px-3 py-4 dark:bg-slate-950">
       {
         page === 0 ? (
           <Card className={"page-card"}>
             <CardHeader className="flex flex-col items-center gap-3">
-              <Image src="/logo.png" alt="logo" width={200} height={200} className="rounded-lg" />
+              <Image src="/logo.png" alt="logo" width={128} height={128} className="rounded-lg" />
               <h1 className="font-bold text-large">RedTrack</h1>
             </CardHeader>
             <CardBody className="px-3 py-0 text-medium text-default-400">
@@ -88,10 +88,10 @@ export default function Home() {
                 To get started, please select or add a new server below.
               </p>
 
-              <div className={"flex flex-col gap-2"}>
+              <div className={"mt-2 flex max-h-[35vh] flex-col gap-2 overflow-y-auto pr-1"}>
                 {
                   servers.map((server: any, index: any) => (
-                    <div className="inline-flex gap-2">
+                    <div className="inline-flex gap-2" key={index}>
                       <Button key={index} variant="bordered" className="w-full" onPress={() => {
                         //reload the page
                         if (!Capacitor.isNativePlatform()) router.reload()
@@ -99,7 +99,7 @@ export default function Home() {
                       }}>
                         {server.url}
                       </Button>
-                      <Button key={"del" + index} variant="flat" color="danger" className="w-1/6" onPress={() => {
+                      <Button key={"del" + index} variant="flat" color="danger" className="min-w-10" onPress={() => {
                         deleteServer(index);
                       }}>
                         <TrashIcon width={25} />
@@ -110,7 +110,7 @@ export default function Home() {
               </div>
             </CardBody>
             <CardFooter>
-              <Button color="default" startContent={<PlusIcon />} variant="faded" onPress={() => setPage(1)}>
+              <Button color="default" className="w-full" startContent={<PlusIcon />} variant="faded" onPress={() => setPage(1)}>
                 Add new server
               </Button>
             </CardFooter>
@@ -120,9 +120,9 @@ export default function Home() {
 
       {
         page === 1 ? (
-          <Card className={"page-card"}>
+            <Card className={"page-card"}>
             <CardHeader className="flex flex-col items-center gap-3">
-              <Image src="https://avatars.githubusercontent.com/u/178515769?s=200&v=4" alt="logo" width={200} height={200} className="rounded-lg" />
+              <Image src="/logo.png" alt="logo" width={112} height={112} className="rounded-lg" />
               <h1 className="font-bold text-large">RedTrack</h1>
             </CardHeader>
             <CardBody>
@@ -145,7 +145,7 @@ export default function Home() {
                   disabled={submitting}
                   className="border-25 border-black" />
 
-                <div className='flex justify-between gap-2'>
+                <div className='flex flex-col gap-2 sm:flex-row sm:justify-between'>
                   <Input
                     type="text"
                     name="username"
@@ -168,12 +168,12 @@ export default function Home() {
                 </div>
               </Form>
             </CardBody>
-            <CardFooter className='flex justify-between gap-2'>
-              <Button type="submit" onClick={() => (document.getElementById("addform") as HTMLFormElement).requestSubmit()} variant="flat" color="success" disabled={submitting}>
+            <CardFooter className='flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-between'>
+              <Button className='w-full sm:w-auto' type="submit" onClick={() => (document.getElementById("addform") as HTMLFormElement).requestSubmit()} variant="flat" color="success" disabled={submitting}>
                 {submitting ? "Loading..." : "Submit"}
               </Button>
 
-              <Button onPress={() => setPage(0)} variant="bordered" disabled={submitting}>
+              <Button className='w-full sm:w-auto' onPress={() => setPage(0)} variant="bordered" disabled={submitting}>
                 Back to list
               </Button>
             </CardFooter>

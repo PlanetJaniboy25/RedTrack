@@ -21,10 +21,11 @@ body {
 }
 
 .page-card {
-  width: 100%;
-  max-width: 200px;
-  height: 100%;
-  max-height: 520px;
+  width: min(100%, 680px);
+  max-width: 680px;
+  height: auto;
+  max-height: min(92vh, 760px);
+  border-radius: 1rem;
 }
 
 @layer base {

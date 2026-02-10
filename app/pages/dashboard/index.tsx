@@ -48,7 +48,7 @@ export default function Dashboard() {
     } as any);
 
     let [tableData, setTableData] = useState<TableRow[]>([]);
-    let [fromDate, setFromDate] = useState(new Date().getTime() - 60 * 1000 * 60 * 12)
+    let [fromDate, setFromDate] = useState(new Date().getTime() - 60 * 1000 * 60 * 3)
     let [toDate, setToDate] = useState(new Date().getTime());
     let [dateOverridden, setDateOverridden] = useState(false);
     let [currentUser, setCurrentUser] = useState<{ id: string; name: string; permissions: number } | null>(null);
@@ -56,6 +56,7 @@ export default function Dashboard() {
     let [users, setUsers] = useState<Array<{ id: string; name: string; permissions: number }>>([]);
 
     const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+    const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -74,7 +75,7 @@ export default function Dashboard() {
     const [userPassword, setUserPassword] = useState("");
     const [isUserSubmitting, setIsUserSubmitting] = useState(false);
 
-    const rangeMs = 12 * 60 * 60 * 1000;
+    const rangeMs = 3 * 60 * 60 * 1000;
     const pingRate = 10000;
 
     const fromDateRef = useRef(fromDate);
@@ -182,24 +183,8 @@ export default function Dashboard() {
         setUsers(json);
     };
 
-    const handleSignOut = async () => {
-        try {
-            if (url && token) {
-                await fetch(url + "/api/auth/endSession", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "authorization": "Bearer " + token
-                    }
-                });
-            }
-        } finally {
-            const servers = JSON.parse((await Preferences.get({ key: "servers" })).value || "[]");
-            const id = parseInt(router.query.server as string) || 0;
-            servers.splice(id, 1);
-            await Preferences.set({ key: "servers", value: JSON.stringify(servers) });
-            router.push("/");
-        }
+    const handleBack = async () => {
+        router.push("/");
     };
 
     const handlePasswordChange = async () => {
@@ -416,18 +401,23 @@ export default function Dashboard() {
 
     return (
         <>
-            <div className="flex flex-col h-screen p-4 space-y-4">
+            <div className="flex flex-col min-h-screen p-3 sm:p-4 space-y-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex flex-col">
                     <span className="text-sm text-default-400">Signed in as</span>
                     <span className="text-lg font-semibold">{currentUser?.name || "Loading user..."}</span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap justify-end gap-2">
                     <Button variant="flat" onPress={() => setIsAccountModalOpen(true)}>
-                        Account settings
+                        Change password
                     </Button>
-                    <Button color="danger" variant="flat" onPress={handleSignOut}>
-                        Sign out
+                    {canManageUsers ? (
+                        <Button variant="flat" color="secondary" onPress={() => setIsUserManagementOpen(true)}>
+                            User management
+                        </Button>
+                    ) : null}
+                    <Button color="danger" variant="flat" onPress={handleBack}>
+                        Back
                     </Button>
                 </div>
             </div>
@@ -445,10 +435,10 @@ export default function Dashboard() {
                     <div className="flex w-full flex-col gap-2 text-xs text-blueGray-100">
                         <div className="flex flex-wrap items-center gap-2">
                             <Button size="sm" variant="flat" onPress={() => handleRangeShift("prev")}>
-                                Previous 12h
+                                Previous 3h
                             </Button>
                             <Button size="sm" variant="flat" onPress={() => handleRangeShift("next")}>
-                                Next 12h
+                                Next 3h
                             </Button>
                             <Button size="sm" color="primary" variant="flat" onPress={handleRangeReset}>
                                 Now
@@ -487,99 +477,6 @@ export default function Dashboard() {
                 </Card>
             </div>
 
-            {canManageUsers ? (
-                <Card>
-                    <CardHeader>
-                        <div className="flex flex-col gap-1">
-                            <h3 className="text-lg font-semibold">User management</h3>
-                            <span className="text-sm text-default-400">Add, remove, or reset passwords.</span>
-                        </div>
-                    </CardHeader>
-                    <CardBody className="space-y-4">
-                        {userError ? <p className="text-red-500">{userError}</p> : null}
-                        <div className="grid gap-3 md:grid-cols-3">
-                            <Input
-                                label="Username"
-                                variant="bordered"
-                                value={newUserName}
-                                onChange={(e) => setNewUserName(e.target.value)}
-                            />
-                            <Input
-                                label="Temporary password"
-                                variant="bordered"
-                                type="password"
-                                value={newUserPassword}
-                                onChange={(e) => setNewUserPassword(e.target.value)}
-                            />
-                            <div className="flex flex-col gap-2">
-                                <Checkbox
-                                    isSelected={newUserPermissions.manageServers}
-                                    onValueChange={(value) =>
-                                        setNewUserPermissions((prev) => ({ ...prev, manageServers: value }))
-                                    }
-                                >
-                                    Manage servers
-                                </Checkbox>
-                                <Checkbox
-                                    isSelected={newUserPermissions.addServer}
-                                    onValueChange={(value) =>
-                                        setNewUserPermissions((prev) => ({ ...prev, addServer: value }))
-                                    }
-                                >
-                                    Add servers
-                                </Checkbox>
-                                <Checkbox
-                                    isSelected={newUserPermissions.manageUsers}
-                                    onValueChange={(value) =>
-                                        setNewUserPermissions((prev) => ({ ...prev, manageUsers: value }))
-                                    }
-                                >
-                                    Manage users
-                                </Checkbox>
-                            </div>
-                        </div>
-                        <div>
-                            <Button color="primary" onPress={handleCreateUser} isLoading={isUserSubmitting}>
-                                Create user
-                            </Button>
-                        </div>
-                        <Table aria-label="User table">
-                            <TableHeader>
-                                <TableColumn>Name</TableColumn>
-                                <TableColumn>Permissions</TableColumn>
-                                <TableColumn>Actions</TableColumn>
-                            </TableHeader>
-                            <TableBody emptyContent={"No users found"} items={users}>
-                                {(user) => (
-                                    <TableRow key={user.id}>
-                                        <TableCell>{user.name}</TableCell>
-                                        <TableCell>{user.permissions}</TableCell>
-                                        <TableCell>
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    variant="flat"
-                                                    onPress={() => setUserPasswordTarget({ id: user.id, name: user.name })}
-                                                >
-                                                    Reset password
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    color="danger"
-                                                    variant="flat"
-                                                    onPress={() => handleDeleteUser(user.id)}
-                                                >
-                                                    Delete
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardBody>
-                </Card>
-            ) : null}
             </div>
 
 
@@ -587,7 +484,7 @@ export default function Dashboard() {
                 <ModalContent>
                     {(onClose) => (
                         <>
-                            <ModalHeader className="flex flex-col gap-1">Account settings</ModalHeader>
+                            <ModalHeader className="flex flex-col gap-1">Change password</ModalHeader>
                             <ModalBody>
                                 {accountError ? <p className="text-red-500">{accountError}</p> : null}
                                 <Input
@@ -619,6 +516,110 @@ export default function Dashboard() {
                                 <Button color="primary" onPress={handlePasswordChange} isLoading={isAccountSubmitting}>
                                     Update password
                                 </Button>
+                            </ModalFooter>
+                        </>
+                    )}
+                </ModalContent>
+            </Modal>
+            <Modal
+                isOpen={isUserManagementOpen}
+                onOpenChange={setIsUserManagementOpen}
+                placement="top-center"
+                scrollBehavior="inside"
+                size="5xl"
+            >
+                <ModalContent>
+                    {(onClose) => (
+                        <>
+                            <ModalHeader className="flex flex-col gap-1">
+                                User management
+                                <span className="text-sm font-normal text-default-400">Add, remove, or reset passwords.</span>
+                            </ModalHeader>
+                            <ModalBody className="space-y-4">
+                                {userError ? <p className="text-red-500">{userError}</p> : null}
+                                <div className="grid gap-3 lg:grid-cols-3">
+                                    <Input
+                                        label="Username"
+                                        variant="bordered"
+                                        value={newUserName}
+                                        onChange={(e) => setNewUserName(e.target.value)}
+                                    />
+                                    <Input
+                                        label="Temporary password"
+                                        variant="bordered"
+                                        type="password"
+                                        value={newUserPassword}
+                                        onChange={(e) => setNewUserPassword(e.target.value)}
+                                    />
+                                    <div className="flex flex-col gap-2">
+                                        <Checkbox
+                                            isSelected={newUserPermissions.manageServers}
+                                            onValueChange={(value) =>
+                                                setNewUserPermissions((prev) => ({ ...prev, manageServers: value }))
+                                            }
+                                        >
+                                            Manage servers
+                                        </Checkbox>
+                                        <Checkbox
+                                            isSelected={newUserPermissions.addServer}
+                                            onValueChange={(value) =>
+                                                setNewUserPermissions((prev) => ({ ...prev, addServer: value }))
+                                            }
+                                        >
+                                            Add servers
+                                        </Checkbox>
+                                        <Checkbox
+                                            isSelected={newUserPermissions.manageUsers}
+                                            onValueChange={(value) =>
+                                                setNewUserPermissions((prev) => ({ ...prev, manageUsers: value }))
+                                            }
+                                        >
+                                            Manage users
+                                        </Checkbox>
+                                    </div>
+                                </div>
+                                <div>
+                                    <Button color="primary" onPress={handleCreateUser} isLoading={isUserSubmitting}>
+                                        Create user
+                                    </Button>
+                                </div>
+                                <Table aria-label="User table">
+                                    <TableHeader>
+                                        <TableColumn>Name</TableColumn>
+                                        <TableColumn>Permissions</TableColumn>
+                                        <TableColumn>Actions</TableColumn>
+                                    </TableHeader>
+                                    <TableBody emptyContent={"No users found"} items={users}>
+                                        {(user) => (
+                                            <TableRow key={user.id}>
+                                                <TableCell>{user.name}</TableCell>
+                                                <TableCell>{user.permissions}</TableCell>
+                                                <TableCell>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="flat"
+                                                            onPress={() => setUserPasswordTarget({ id: user.id, name: user.name })}
+                                                        >
+                                                            Reset password
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            color="danger"
+                                                            variant="flat"
+                                                            onPress={() => handleDeleteUser(user.id)}
+                                                        >
+                                                            Delete
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </ModalBody>
+                            <ModalFooter>
+                                <Button variant="flat" onPress={onClose}>Close</Button>
                             </ModalFooter>
                         </>
                     )}
