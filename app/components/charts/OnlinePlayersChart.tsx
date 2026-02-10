@@ -2,21 +2,30 @@ import Chart from "chart.js/auto";
 import 'chartjs-adapter-dayjs-4/dist/chartjs-adapter-dayjs-4.esm';
 import React, { useEffect, useRef } from "react";
 
+Chart.register(require("chartjs-plugin-zoom").default);
 
-export function OnlinePlayersChart({ data }: { data: any }) {
-    Chart.register(require("chartjs-plugin-zoom").default)
+export function OnlinePlayersChart({ data, preserveViewport = false }: { data: any; preserveViewport?: boolean }) {
     const chartRef = useRef<Chart | null>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     useEffect(() => {
-        if (!data || !data.data) return; // Ensure data is valid
+        if (!data || !data.data) return;
 
-        let datasets: any[] = [];
-        for (let server in data.data) {
-            let serverData = data.data[server];
+        const hiddenMap = new Map<string, boolean>();
+        if (chartRef.current) {
+            chartRef.current.data.datasets.forEach((dataset: any, index: number) => {
+                const meta = chartRef.current?.getDatasetMeta(index);
+                hiddenMap.set(String(dataset.label), Boolean(dataset.hidden || meta?.hidden));
+            });
+        }
 
-            let serverDataset = {
-                label: serverData.name || server,
+        const datasets: any[] = [];
+        for (const server in data.data) {
+            const serverData = data.data[server];
+            const label = serverData.name || server;
+
+            datasets.push({
+                label,
                 data: serverData.pings.map((point: any) => ({
                     x: point.timestamp,
                     y: point.count
@@ -26,21 +35,43 @@ export function OnlinePlayersChart({ data }: { data: any }) {
                 pointHoverRadius: 0,
                 backgroundColor: serverData.color,
                 borderColor: serverData.color,
-            };
-
-            datasets.push(serverDataset);
+                hidden: hiddenMap.get(String(label)) || false,
+            });
         }
 
         const maxYValue = datasets.length
-            ? Math.max(
-                ...datasets.map((dataset: any) =>
-                    Math.max(...dataset.data.map((point: any) => point.y))
-                )
-            )
+            ? Math.max(...datasets.map((dataset: any) => Math.max(...dataset.data.map((point: any) => point.y))))
             : 1;
         const stepSize = Math.pow(10, Math.floor(Math.log10(Math.max(1, maxYValue))));
 
-        const options = {
+        if (chartRef.current) {
+            chartRef.current.data.datasets = datasets;
+
+            if (chartRef.current.options?.scales && 'x' in chartRef.current.options.scales) {
+                const xScale = chartRef.current.options.scales.x as any;
+                if (xScale?.time) {
+                    xScale.time.unit = data.type;
+                }
+                if (!preserveViewport) {
+                    xScale.min = data.from;
+                    xScale.max = data.to;
+                }
+            }
+
+            if (chartRef.current.options?.scales && 'y' in chartRef.current.options.scales) {
+                const yScale = chartRef.current.options.scales.y as any;
+                if (yScale?.ticks) {
+                    yScale.ticks.stepSize = stepSize;
+                }
+            }
+
+            chartRef.current.update('none');
+            return;
+        }
+
+        if (!canvasRef.current) return;
+
+        chartRef.current = new Chart(canvasRef.current, {
             type: 'line',
             data: { datasets },
             options: {
@@ -96,11 +127,8 @@ export function OnlinePlayersChart({ data }: { data: any }) {
                         ticks: {
                             color: "rgba(255,255,255,.7)",
                             beginAtZero: true,
-                            //stepsize: if there is one with more then 10, use 10 as stepsize, if there is one with over 100, use 100 as stepsize, and so on. default is 1. do NEVER use numbers like 300, 60, 9 etc. only starting with 1 followed by zeroes
                             stepSize,
-                            callback: (value: any) => {
-                                return value < 0 ? 0 : value; // Prevents negative values
-                            },
+                            callback: (value: any) => value < 0 ? 0 : value,
                         },
                         grid: {
                             borderDash: [3],
@@ -113,8 +141,6 @@ export function OnlinePlayersChart({ data }: { data: any }) {
                         type: 'time',
                         time: {
                             tooltipFormat: 'll hh:mm:ss',
-                            //allow tooltip to be multiple next to each other
-
                             displayFormats: {
                                 minute: 'll',
                                 hour: 'll HH:mm',
@@ -130,11 +156,8 @@ export function OnlinePlayersChart({ data }: { data: any }) {
                             autoSkip: true,
                             color: "white",
                             callback: (val: any) => {
-                                let date = new Date(val);
-                                return [
-                                    date.toLocaleDateString(),
-                                    date.toLocaleTimeString()
-                                ];
+                                const date = new Date(val);
+                                return [date.toLocaleDateString(), date.toLocaleTimeString()];
                             }
                         },
                         grid: {
@@ -143,36 +166,24 @@ export function OnlinePlayersChart({ data }: { data: any }) {
                     },
                 },
             }
-        };
+        } as any);
+    }, [data, preserveViewport]);
 
-        // Destroy previous chart instance before creating a new one
-        if (chartRef.current) {
-            chartRef.current.data.datasets = datasets;
-            if (chartRef.current.options?.scales && 'x' in chartRef.current.options.scales) {
-                const xScale = chartRef.current.options.scales.x as any;
-                if (xScale?.time) {
-                    xScale.time.unit = data.type;
-                }
-                xScale.min = data.from;
-                xScale.max = data.to;
-            }
-            chartRef.current.update('none');
-        } else if (canvasRef.current) {
-            chartRef.current = new Chart(canvasRef.current, options as any);
-        }
-
+    useEffect(() => {
         return () => {
             if (chartRef.current) {
                 chartRef.current.destroy();
                 chartRef.current = null;
             }
         };
-    }, [data]);
+    }, []);
 
     return (
-        <canvas ref={canvasRef} className="p-2"
+        <canvas
+            ref={canvasRef}
+            className="p-2"
             onDoubleClick={() => {
-                let chart = chartRef.current;
+                const chart = chartRef.current;
                 if (!chart) return;
                 // @ts-ignore
                 chart.options.scales.x.min = undefined;

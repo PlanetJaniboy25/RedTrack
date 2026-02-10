@@ -16,20 +16,44 @@ export default function Home() {
 
   }
 
+
+  function getBackendHost(address: string) {
+    try {
+      return new URL(address).host;
+    } catch {
+      return address.replace(/^https?:\/\//, "");
+    }
+  }
+
+  function resolveServerName(server: { name?: string; username?: string; url: string }) {
+    const customName = (server.name || "").trim();
+    if (customName) return customName;
+
+    const username = (server.username || "").trim();
+    if (username) {
+      return `${username}@${getBackendHost(server.url)}`;
+    }
+
+    return getBackendHost(server.url);
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     try {
       e.preventDefault();
       setSubmitting(true)
       const form = e.currentTarget;
       const data = new FormData(form);
-      const url = data.get("url") as string;
+      const url = (data.get("url") as string).trim();
+      const username = (data.get("username") as string).trim();
+      const customName = (data.get("serverName") as string | null)?.trim() || "";
+      const resolvedName = customName || `${username}@${getBackendHost(url)}`;
       const response = await fetch(url + "/api/auth/startSession", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: data.get("username"),
+          name: username,
           password: data.get("password")
         }),
       });
@@ -45,7 +69,9 @@ export default function Home() {
       if (json.success) {
         let servers = JSON.parse((await Preferences.get({ key: "servers" })).value || "[]");
         servers.push({
-          url: url,
+          name: resolvedName,
+          username,
+          url,
           token: json.sessionId
         });
         await Preferences.set({ key: "servers", value: JSON.stringify(servers) });
@@ -74,12 +100,12 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center py-2 w-full h-screen">
+    <div className="flex min-h-screen w-full items-center justify-center bg-slate-50 px-3 pb-4 pt-[max(env(safe-area-inset-top),1rem)] dark:bg-slate-950">
       {
         page === 0 ? (
           <Card className={"page-card"}>
             <CardHeader className="flex flex-col items-center gap-3">
-              <Image src="/logo.png" alt="logo" width={200} height={200} className="rounded-lg" />
+              <Image src="/logo.png" alt="logo" width={128} height={128} className="rounded-lg" />
               <h1 className="font-bold text-large">RedTrack</h1>
             </CardHeader>
             <CardBody className="px-3 py-0 text-medium text-default-400">
@@ -88,18 +114,21 @@ export default function Home() {
                 To get started, please select or add a new server below.
               </p>
 
-              <div className={"flex flex-col gap-2"}>
+              <div className={"mt-2 flex max-h-[35vh] flex-col gap-2 overflow-y-auto pr-1"}>
                 {
                   servers.map((server: any, index: any) => (
-                    <div className="inline-flex gap-2">
-                      <Button key={index} variant="bordered" className="w-full" onPress={() => {
+                    <div className="inline-flex gap-2" key={index}>
+                      <Button key={index} variant="bordered" className="w-full justify-start" onPress={() => {
                         //reload the page
                         if (!Capacitor.isNativePlatform()) router.reload()
                         router.push("/dashboard?server=" + index);
                       }}>
-                        {server.url}
+                        <div className='flex flex-col items-start text-left'>
+                          <span className='font-semibold'>{resolveServerName(server)}</span>
+                          <span className='text-xs text-default-500'>{server.url}</span>
+                        </div>
                       </Button>
-                      <Button key={"del" + index} variant="flat" color="danger" className="w-1/6" onPress={() => {
+                      <Button key={"del" + index} variant="flat" color="danger" className="min-w-10" onPress={() => {
                         deleteServer(index);
                       }}>
                         <TrashIcon width={25} />
@@ -110,7 +139,7 @@ export default function Home() {
               </div>
             </CardBody>
             <CardFooter>
-              <Button color="default" startContent={<PlusIcon />} variant="faded" onPress={() => setPage(1)}>
+              <Button color="default" className="w-full" startContent={<PlusIcon />} variant="faded" onPress={() => setPage(1)}>
                 Add new server
               </Button>
             </CardFooter>
@@ -120,9 +149,9 @@ export default function Home() {
 
       {
         page === 1 ? (
-          <Card className={"page-card"}>
+            <Card className={"page-card"}>
             <CardHeader className="flex flex-col items-center gap-3">
-              <Image src="https://avatars.githubusercontent.com/u/178515769?s=200&v=4" alt="logo" width={200} height={200} className="rounded-lg" />
+              <Image src="/logo.png" alt="logo" width={112} height={112} className="rounded-lg" />
               <h1 className="font-bold text-large">RedTrack</h1>
             </CardHeader>
             <CardBody>
@@ -145,7 +174,16 @@ export default function Home() {
                   disabled={submitting}
                   className="border-25 border-black" />
 
-                <div className='flex justify-between gap-2'>
+                <Input
+                  type="text"
+                  name="serverName"
+                  label={"Server entry name (optional)"}
+                  placeholder="My Production"
+                  labelPlacement="outside"
+                  disabled={submitting}
+                  className="border-25 border-black" />
+
+                <div className='flex flex-col gap-2 sm:flex-row sm:justify-between'>
                   <Input
                     type="text"
                     name="username"
@@ -168,12 +206,12 @@ export default function Home() {
                 </div>
               </Form>
             </CardBody>
-            <CardFooter className='flex justify-between gap-2'>
-              <Button type="submit" onClick={() => (document.getElementById("addform") as HTMLFormElement).requestSubmit()} variant="flat" color="success" disabled={submitting}>
+            <CardFooter className='flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-between'>
+              <Button className='w-full sm:w-auto' type="submit" onClick={() => (document.getElementById("addform") as HTMLFormElement).requestSubmit()} variant="flat" color="success" disabled={submitting}>
                 {submitting ? "Loading..." : "Submit"}
               </Button>
 
-              <Button onPress={() => setPage(0)} variant="bordered" disabled={submitting}>
+              <Button className='w-full sm:w-auto' onPress={() => setPage(0)} variant="bordered" disabled={submitting}>
                 Back to list
               </Button>
             </CardFooter>
