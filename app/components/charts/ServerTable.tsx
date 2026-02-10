@@ -22,6 +22,16 @@ import {
     ModalFooter,
     Checkbox,
 } from "@heroui/react";
+import {
+    ResponsiveContainer,
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Legend,
+    Tooltip as RechartsTooltip,
+} from "recharts";
 
 import { AddServer } from "../server/AddServer";
 
@@ -40,6 +50,12 @@ export function capitalize(s: String) {
 }
 
 const INITIAL_VISIBLE_COLUMNS = ["server", "playerCount", "dailyPeak", "record"];
+
+type PredictionPoint = {
+    timestamp: number;
+    label: string;
+    predictedPlayers: number;
+};
 
 export function ServerTable({
     url,
@@ -75,7 +91,7 @@ export function ServerTable({
     const [editError, setEditError] = React.useState("");
     const [isSaving, setIsSaving] = React.useState(false);
     const [predictionTarget, setPredictionTarget] = React.useState<{ id: string; name: string } | null>(null);
-    const [predictionResult, setPredictionResult] = React.useState<number | null>(null);
+    const [predictionSeries, setPredictionSeries] = React.useState<PredictionPoint[]>([]);
     const [predictionError, setPredictionError] = React.useState("");
     const [isPredicting, setIsPredicting] = React.useState(false);
 
@@ -238,7 +254,7 @@ export function ServerTable({
         if (!url || !canSeePrediction) return;
 
         setPredictionTarget({ id: serverId, name: serverName });
-        setPredictionResult(null);
+        setPredictionSeries([]);
         setPredictionError("");
         setIsPredicting(true);
 
@@ -257,45 +273,85 @@ export function ServerTable({
             return;
         }
 
-        const points = Array.isArray(json.points) ? json.points : [];
+        const points = (Array.isArray(json.points) ? json.points : [])
+            .map((point: any) => ({
+                timestamp: Number(point.timestamp),
+                count: Number(point.count),
+            }))
+            .filter((point: { timestamp: number; count: number; }) =>
+                Number.isFinite(point.timestamp) && Number.isFinite(point.count),
+            )
+            .sort((a: { timestamp: number; }, b: { timestamp: number; }) => a.timestamp - b.timestamp);
+
         const minimumCoverageMs = 24 * 60 * 60 * 1000;
 
         if (points.length < 2) {
-            setPredictionError("Not enough data to predict player count.");
+            setPredictionError("error: Not enough data to predict player counts.");
             setIsPredicting(false);
             return;
         }
 
         const coveredTime = points[points.length - 1].timestamp - points[0].timestamp;
         if (coveredTime < minimumCoverageMs) {
-            setPredictionError("At least 24 hours of data are required to predict player count.");
+            setPredictionError("error: At least 24 hours of data are required to predict player counts.");
             setIsPredicting(false);
             return;
         }
 
         const now = Date.now();
-        const targetTimestamp = now + 60 * 60 * 1000;
-        const dayAgoTimestamp = targetTimestamp - minimumCoverageMs;
-        const reference = points.reduce((best: any, point: any) => {
-            if (!best) return point;
-            const bestDistance = Math.abs(best.timestamp - dayAgoTimestamp);
-            const currentDistance = Math.abs(point.timestamp - dayAgoTimestamp);
-            return currentDistance < bestDistance ? point : best;
-        }, null);
+        const recentWindowMs = 6 * 60 * 60 * 1000;
+        const recentPoints = points.filter((point: { timestamp: number; }) => point.timestamp >= now - recentWindowMs);
 
-        if (!reference || typeof reference.count !== "number") {
-            setPredictionError("Unable to predict from available data.");
+        const fallbackRecentAverage = points.reduce((sum: number, point: { count: number; }) => sum + point.count, 0) / points.length;
+        const recentAverage = recentPoints.length > 0
+            ? recentPoints.reduce((sum: number, point: { count: number; }) => sum + point.count, 0) / recentPoints.length
+            : fallbackRecentAverage;
+
+        const firstRecent = recentPoints[0] || points[Math.max(0, points.length - 2)];
+        const lastRecent = recentPoints[recentPoints.length - 1] || points[points.length - 1];
+        const recentDurationHours = Math.max(1, (lastRecent.timestamp - firstRecent.timestamp) / (60 * 60 * 1000));
+        const trendPerHour = (lastRecent.count - firstRecent.count) / recentDurationHours;
+
+        const groupedByHour = points.reduce((acc: Record<number, number[]>, point: { timestamp: number; count: number; }) => {
+            const hour = new Date(point.timestamp).getHours();
+            if (!acc[hour]) {
+                acc[hour] = [];
+            }
+            acc[hour].push(point.count);
+            return acc;
+        }, {});
+
+        const hourlyAverage = Object.keys(groupedByHour).reduce((acc: Record<number, number>, hourKey: string) => {
+            const hour = Number(hourKey);
+            const values = groupedByHour[hour];
+            acc[hour] = values.reduce((sum, value) => sum + value, 0) / values.length;
+            return acc;
+        }, {});
+
+        if (Object.keys(hourlyAverage).length === 0) {
+            setPredictionError("error: Unable to build predictions from available data.");
             setIsPredicting(false);
             return;
         }
 
-        const recentPoints = points.filter((point: any) => point.timestamp >= now - 60 * 60 * 1000);
-        const recentAverage = recentPoints.length > 0
-            ? recentPoints.reduce((sum: number, point: any) => sum + Number(point.count || 0), 0) / recentPoints.length
-            : Number(points[points.length - 1]?.count || 0);
+        const predictionWindow = 24;
+        const predictions: PredictionPoint[] = [];
 
-        const predicted = Math.max(0, Math.round((reference.count * 0.7) + (recentAverage * 0.3)));
-        setPredictionResult(predicted);
+        for (let hourOffset = 1; hourOffset <= predictionWindow; hourOffset++) {
+            const futureTimestamp = now + hourOffset * 60 * 60 * 1000;
+            const futureHour = new Date(futureTimestamp).getHours();
+            const hourBaseline = hourlyAverage[futureHour] ?? recentAverage;
+            const trendComponent = trendPerHour * hourOffset;
+            const blended = (hourBaseline * 0.75) + ((recentAverage + trendComponent) * 0.25);
+
+            predictions.push({
+                timestamp: futureTimestamp,
+                label: new Date(futureTimestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                predictedPlayers: Math.max(0, Math.round(blended)),
+            });
+        }
+
+        setPredictionSeries(predictions);
         setIsPredicting(false);
     };
 
@@ -468,12 +524,37 @@ export function ServerTable({
                 <ModalContent>
                     {(onClose) => (
                         <>
-                            <ModalHeader className="flex flex-col gap-1">Prediction for {predictionTarget?.name}</ModalHeader>
+                            <ModalHeader className="flex flex-col gap-1">Prediction for {predictionTarget?.name}<span className="text-sm font-normal text-default-400">Next 24 hours (hourly)</span></ModalHeader>
                             <ModalBody>
                                 {isPredicting ? <p>Calculating prediction...</p> : null}
-                                {!isPredicting && predictionError ? <p className="text-red-500">error: {predictionError}</p> : null}
-                                {!isPredicting && !predictionError && predictionResult !== null ? (
-                                    <p className="text-lg">Predicted players in ~1 hour: <strong>{predictionResult}</strong></p>
+                                {!isPredicting && predictionError ? <p className="text-red-500">{predictionError}</p> : null}
+                                {!isPredicting && !predictionError && predictionSeries.length > 0 ? (
+                                    <div className="h-72 w-full">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <LineChart data={predictionSeries} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis dataKey="label" interval={2} minTickGap={20} />
+                                                <YAxis allowDecimals={false} />
+                                                <RechartsTooltip
+                                                    formatter={(value: number) => [value, "Predicted players"]}
+                                                    labelFormatter={(_, payload: any[]) =>
+                                                        payload?.[0]?.payload?.timestamp
+                                                            ? new Date(payload[0].payload.timestamp).toLocaleString()
+                                                            : ""
+                                                    }
+                                                />
+                                                <Legend />
+                                                <Line
+                                                    type="monotone"
+                                                    dataKey="predictedPlayers"
+                                                    name="Predicted players"
+                                                    stroke="#8884d8"
+                                                    strokeWidth={2}
+                                                    dot={false}
+                                                />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
                                 ) : null}
                             </ModalBody>
                             <ModalFooter>
