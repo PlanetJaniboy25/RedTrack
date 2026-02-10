@@ -6,6 +6,7 @@ export function OnlinePlayersChart({ data, preserveViewport = false }: { data: a
     const chartRef = useRef<Chart | null>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const pluginRegisteredRef = useRef(false);
+    const hasManualViewportRef = useRef(false);
 
     useEffect(() => {
         if (pluginRegisteredRef.current || typeof window === "undefined") return;
@@ -57,7 +58,7 @@ export function OnlinePlayersChart({ data, preserveViewport = false }: { data: a
                 if (xScale?.time) {
                     xScale.time.unit = data.type;
                 }
-                if (!preserveViewport) {
+                if (!preserveViewport && !hasManualViewportRef.current) {
                     xScale.min = data.from;
                     xScale.max = data.to;
                 }
@@ -116,6 +117,9 @@ export function OnlinePlayersChart({ data, preserveViewport = false }: { data: a
                                 enabled: true
                             },
                             mode: 'x',
+                            onZoomComplete: () => {
+                                hasManualViewportRef.current = true;
+                            },
                         },
                     }
                 },
@@ -190,10 +194,11 @@ export function OnlinePlayersChart({ data, preserveViewport = false }: { data: a
             onDoubleClick={() => {
                 const chart = chartRef.current;
                 if (!chart) return;
+                hasManualViewportRef.current = false;
                 // @ts-ignore
-                chart.options.scales.x.min = undefined;
+                chart.options.scales.x.min = data?.from;
                 // @ts-ignore
-                chart.options.scales.x.max = undefined;
+                chart.options.scales.x.max = data?.to;
                 // @ts-ignore
                 chart.options.scales.y.min = undefined;
                 // @ts-ignore
