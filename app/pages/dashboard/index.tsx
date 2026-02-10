@@ -670,13 +670,13 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            <Card className="min-h-[520px] md:min-h-[560px]">
+            <Card className="min-h-[520px] md:min-h-[560px] overflow-hidden">
                 <CardHeader>
                     <h2 className="text-blueGray-100 mb-1 text-xl font-semibold">
                         Currently connected players
                     </h2>
                 </CardHeader>
-                <CardBody className="h-[280px] md:h-[320px] p-0">
+                <CardBody className="h-[280px] md:h-[320px] p-0 overflow-hidden">
                     <OnlinePlayersChart data={data} />
                 </CardBody>
                 <CardFooter>
@@ -748,7 +748,7 @@ export default function Dashboard() {
 
             <div>
                 <Card>
-                    <CardBody className="overflow-y-scroll">
+                    <CardBody>
                         <ServerTable
                             url={url}
                             token={token}

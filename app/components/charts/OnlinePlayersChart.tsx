@@ -191,7 +191,7 @@ export function OnlinePlayersChart({ data, preserveViewport = false }: { data: a
     return (
         <canvas
             ref={canvasRef}
-            className="p-2"
+            className="block h-full w-full p-2"
             onDoubleClick={() => {
                 const chart = chartRef.current;
                 if (!chart) return;
