@@ -52,7 +52,7 @@ export default function Dashboard() {
     let [toDate, setToDate] = useState(new Date().getTime());
     let [dateOverridden, setDateOverridden] = useState(false);
     let [currentUser, setCurrentUser] = useState<{ id: string; name: string; permissions: number } | null>(null);
-    let [serverDetails, setServerDetails] = useState<Record<string, { name: string; ip: string; port: number; color: string }>>({});
+    let [serverDetails, setServerDetails] = useState<Record<string, { name: string; ip: string; port: number; color: string; bedrock: boolean }>>({});
     let [users, setUsers] = useState<Array<{ id: string; name: string; permissions: number }>>([]);
 
     const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
@@ -205,7 +205,8 @@ export default function Dashboard() {
                 name: server.name,
                 ip: server.ip,
                 port: server.port,
-                color: server.color
+                color: server.color,
+                bedrock: server.bedrock !== false
             };
             return acc;
         }, {});

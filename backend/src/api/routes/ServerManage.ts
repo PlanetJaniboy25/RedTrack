@@ -5,6 +5,15 @@ import Permissions from "../../utils/Permissions";
 
 const router = Router();
 
+const parseBedrockFlag = (value: unknown, fallback = true): boolean => {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") {
+        if (value.toLowerCase() === "true") return true;
+        if (value.toLowerCase() === "false") return false;
+    }
+    return fallback;
+};
+
 const isValidHostname = (value: string): boolean => {
     const hostnameRegex = /^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*$/;
     return hostnameRegex.test(value);
@@ -23,10 +32,11 @@ router.post('/create', requiresAuth, async (req: Request, res: Response): Promis
         return;
     }
     try {
-        const { serverName, serverIP, serverPort } = req.body;
+        const { serverName, serverIP, serverPort, bedrock } = req.body;
         const trimmedServerName = typeof serverName === "string" ? serverName.trim() : "";
         const trimmedServerIP = typeof serverIP === "string" ? serverIP.trim() : "";
         const parsedPort = typeof serverPort === "string" ? parseInt(serverPort, 10) : Number(serverPort);
+        const isBedrockServer = parseBedrockFlag(bedrock, true);
 
         if (!trimmedServerName || !trimmedServerIP || !serverPort || Number.isNaN(parsedPort)) {
             res.status(400).json({ error: "All fields are required" });
@@ -52,7 +62,8 @@ router.post('/create', requiresAuth, async (req: Request, res: Response): Promis
         await new Server({
             name: trimmedServerName,
             ip: trimmedServerIP,
-            port: parsedPort
+            port: parsedPort,
+            bedrock: isBedrockServer
         }).save();
 
         console.log("Server created successfully");
@@ -90,10 +101,11 @@ router.patch('/:id', requiresAuth, async (req: Request, res: Response): Promise<
 
     try {
         const { id } = req.params;
-        const { serverName, serverIP, serverPort } = req.body;
+        const { serverName, serverIP, serverPort, bedrock } = req.body;
         const trimmedServerName = typeof serverName === "string" ? serverName.trim() : "";
         const trimmedServerIP = typeof serverIP === "string" ? serverIP.trim() : "";
         const parsedPort = typeof serverPort === "string" ? parseInt(serverPort, 10) : Number(serverPort);
+        const isBedrockServer = parseBedrockFlag(bedrock, true);
 
         if (!trimmedServerName || !trimmedServerIP || !serverPort || Number.isNaN(parsedPort)) {
             res.status(400).json({ error: "All fields are required" });
@@ -120,7 +132,8 @@ router.patch('/:id', requiresAuth, async (req: Request, res: Response): Promise<
             {
                 name: trimmedServerName,
                 ip: trimmedServerIP,
-                port: parsedPort
+                port: parsedPort,
+                bedrock: isBedrockServer
             },
             { new: true }
         );

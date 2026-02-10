@@ -8,6 +8,7 @@ import {
     Button,
     useDisclosure,
     Input,
+    Checkbox,
 } from "@heroui/react";
 
 import { PlusIcon } from "@/components/icons";
@@ -24,6 +25,7 @@ export function AddServer({
     const [serverName, setServerName] = React.useState("");
     const [serverIP, setServerIP] = React.useState("");
     const [serverPort, setServerPort] = React.useState("");
+    const [isBedrockServer, setIsBedrockServer] = React.useState(true);
     const [error, setError] = React.useState("");
     const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -31,6 +33,7 @@ export function AddServer({
         setServerName("");
         setServerIP("");
         setServerPort("");
+        setIsBedrockServer(true);
         setError("");
         setIsSubmitting(false);
     };
@@ -58,7 +61,8 @@ export function AddServer({
         return {
             serverName: trimmedName,
             serverIP: trimmedIP,
-            serverPort: parsedPort
+            serverPort: parsedPort,
+            bedrock: isBedrockServer,
         };
     };
 
@@ -134,6 +138,9 @@ export function AddServer({
                                     onChange={(e) => setServerPort(e.target.value)}
                                     value={serverPort}
                                 />
+                                <Checkbox isSelected={isBedrockServer} onValueChange={setIsBedrockServer}>
+                                    Bedrock server (disable for Java)
+                                </Checkbox>
                             </ModalBody>
                             <ModalFooter>
                                 <Button color="danger" variant="flat" onPress={onClose} isDisabled={isSubmitting}>

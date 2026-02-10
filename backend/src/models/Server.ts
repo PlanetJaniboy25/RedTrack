@@ -19,5 +19,10 @@ export default model("servers", new Schema({
         type: String,
         required: true,
         default: () => `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`
+    },
+    bedrock: {
+        type: Boolean,
+        required: true,
+        default: true
     }
 }));
