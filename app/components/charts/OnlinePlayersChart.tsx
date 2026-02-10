@@ -59,8 +59,9 @@ export function OnlinePlayersChart({ data, preserveViewport = false }: { data: a
                     xScale.time.unit = data.type;
                 }
                 if (!preserveViewport && !hasManualViewportRef.current) {
-                    xScale.min = data.from;
-                    xScale.max = data.to;
+                    const nowTs = Date.now();
+                    xScale.min = Math.min(data.from, nowTs - 1);
+                    xScale.max = Math.min(data.to, nowTs);
                 }
             }
 
@@ -159,8 +160,8 @@ export function OnlinePlayersChart({ data, preserveViewport = false }: { data: a
                             },
                             unit: data.type,
                         },
-                        min: data.from,
-                        max: data.to,
+                        min: Math.min(data.from, Date.now() - 1),
+                        max: Math.min(data.to, Date.now()),
                         ticks: {
                             autoSkip: true,
                             color: "white",
@@ -196,9 +197,9 @@ export function OnlinePlayersChart({ data, preserveViewport = false }: { data: a
                 if (!chart) return;
                 hasManualViewportRef.current = false;
                 // @ts-ignore
-                chart.options.scales.x.min = data?.from;
+                chart.options.scales.x.min = Math.min(data?.from ?? Date.now() - 1, Date.now() - 1);
                 // @ts-ignore
-                chart.options.scales.x.max = data?.to;
+                chart.options.scales.x.max = Math.min(data?.to ?? Date.now(), Date.now());
                 // @ts-ignore
                 chart.options.scales.y.min = undefined;
                 // @ts-ignore
