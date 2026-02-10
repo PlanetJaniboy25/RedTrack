@@ -87,6 +87,11 @@ export default function Dashboard() {
         canSeePrediction: false,
     });
 
+    const modalClassNames = {
+        wrapper: "items-start p-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:items-center sm:p-6",
+        base: "my-2 sm:my-8",
+    };
+
     const rangeMs = 1 * 60 * 60 * 1000;
     const pingRate = 10000;
 
@@ -659,7 +664,12 @@ export default function Dashboard() {
             </div>
 
 
-            <Modal isOpen={isAccountModalOpen} onOpenChange={setIsAccountModalOpen} placement="top-center">
+            <Modal
+                isOpen={isAccountModalOpen}
+                onOpenChange={setIsAccountModalOpen}
+                placement="top-center"
+                classNames={modalClassNames}
+            >
                 <ModalContent>
                     {(onClose) => (
                         <>
@@ -706,6 +716,7 @@ export default function Dashboard() {
                 placement="top-center"
                 scrollBehavior="inside"
                 size="5xl"
+                classNames={modalClassNames}
             >
                 <ModalContent>
                     {(onClose) => (
@@ -836,7 +847,12 @@ export default function Dashboard() {
                     )}
                 </ModalContent>
             </Modal>
-            <Modal isOpen={!!userPermissionTarget} onOpenChange={() => setUserPermissionTarget(null)} placement="top-center">
+            <Modal
+                isOpen={!!userPermissionTarget}
+                onOpenChange={() => setUserPermissionTarget(null)}
+                placement="top-center"
+                classNames={modalClassNames}
+            >
                 <ModalContent>
                     {(onClose) => (
                         <>
@@ -902,7 +918,12 @@ export default function Dashboard() {
                     )}
                 </ModalContent>
             </Modal>
-            <Modal isOpen={!!userPasswordTarget} onOpenChange={() => setUserPasswordTarget(null)} placement="top-center">
+            <Modal
+                isOpen={!!userPasswordTarget}
+                onOpenChange={() => setUserPasswordTarget(null)}
+                placement="top-center"
+                classNames={modalClassNames}
+            >
                 <ModalContent>
                     {(onClose) => (
                         <>
