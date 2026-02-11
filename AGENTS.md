@@ -5,29 +5,35 @@ Guidance for coding agents working in this repository.
 ## Scope
 These instructions apply to the entire repository unless a deeper `AGENTS.md` overrides them.
 
-## Project overview
-- `app/`: Next.js frontend (also used in GitHub Pages and Capacitor builds).
-- `backend/`: Node.js + Express + MongoDB API.
-- `docs/`: User and developer docs.
-- `types/`: Shared typings.
+## Repository map
+- `app/`: Next.js frontend (web + Capacitor wrapper, GitHub Pages export).
+- `backend/`: Express + MongoDB API service.
+- `docs/`: End-user and developer docs.
+- `types/`: Shared type declarations.
 
-## Common workflows
+## Global rules
+- Keep changes tightly scoped to the user request.
+- Avoid adding noisy debug logging.
+- Preserve existing formatting/style in touched files.
+- Update docs when behavior/configuration changes.
+- Run relevant checks before committing.
+
+## Validation commands
 - Frontend lint:
   ```bash
   npm --prefix app run lint
   ```
-- Backend type build:
+- Backend TypeScript build:
   ```bash
   npm --prefix backend run build
   ```
 
-## Notes specific to this repo
-- GitHub Pages build uses `/RedTrack` base path (`app/next.config.ts`); keep this in mind for static/public asset URLs used in Pages mode.
-- When updating docs for hosted usage (`https://redstonecloud.github.io/RedTrack`), call out browser mixed-content constraints (hosted HTTPS page cannot call HTTP backend).
-- Backend HTTPS mode expects configured certificate/key paths when enabled.
+## RedTrack-specific constraints
+- GitHub Pages build is served under `/RedTrack` (`app/next.config.ts`).
+- Hosted site is `https://redstonecloud.github.io/RedTrack`; browser mixed-content rules apply (hosted HTTPS app cannot call HTTP backend).
+- Backend HTTPS mode requires valid cert/key path configuration when enabled.
 
-## Change discipline
-- Keep changes minimal and scoped to the request.
-- Avoid introducing noisy debug logs in frontend/backend.
-- Update docs when behavior or required configuration changes.
-- Run relevant checks for touched areas before committing.
+## Where to put detailed instructions
+- Frontend-specific rules live in `app/AGENTS.md`.
+- Backend-specific rules live in `backend/AGENTS.md`.
+- Follow the most specific AGENTS file for paths you modify.
