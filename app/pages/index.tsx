@@ -5,7 +5,7 @@ import { PlusIcon } from "@/components/icons";
 import { Preferences } from '@capacitor/preferences';
 import { useRouter } from "next/router";
 import { PencilIcon, TrashIcon } from "lucide-react";
-import { LogoDiscord } from 'vercel-geist-icons';
+import {LogoDiscord, LogoGithub} from 'vercel-geist-icons';
 
 export default function Home() {
   type ServerEntry = {
@@ -227,6 +227,19 @@ export default function Home() {
                     aria-label='Support on Discord'
                 >
                   <LogoDiscord height={20} width={20} />
+                </Button>
+                <Button
+                    as="a"
+                    href="https://github.com/RedstoneCloud/RedTrack"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className='w-1/6'
+                    variant='ghost'
+                    color='default'
+                    isIconOnly
+                    aria-label='View on GitHub'
+                >
+                  <LogoGithub height={20} width={20} />
                 </Button>
               </div>
             </CardFooter>
